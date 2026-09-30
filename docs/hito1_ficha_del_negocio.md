@@ -2,7 +2,7 @@
 
 **Pareja:** Maholy García · Brittany García
 **Paralelo:** Aplicación para el Servidor Web A
-**Negocio en una línea:** Notix plataforma web de notas visuales organizadas en tableros Kanban, dirigida a estudiantes, trabajadores y pequeños equipos que necesitan registrar sus actividades diarias, coordinar sus pendientes y compartir tableros con otros usuarios de forma clara e interactiva.
+**Negocio en una línea:** Plataforma web de notas visuales organizadas en tableros Kanban, dirigida a estudiantes, trabajadores y pequeños equipos.
 
 ## 1. Negocio de referencia
 
@@ -173,6 +173,7 @@ Se eligió el tipo time.Time en lugar de texto o string para manejar las fechas 
 
 ### Diagrama del modelo completo
 
+```mermaid
 erDiagram
 USUARIO ||--o{ TABLERO : "crea"
 USUARIO ||--o{ TAREA : "registra"
@@ -234,6 +235,7 @@ USUARIO ||--o{ COMENTARIO : "escribe"
         int autor_id FK
         datetime creado
     }
+```
 
 **Decisión discutible del modelo y por qué la tomamos:**
 Decisión: Mantener TableroCompartido como una entidad independiente intermedia en lugar de almacenar una lista de correos o IDs de usuarios en un campo de texto dentro del Tablero.  
@@ -262,8 +264,9 @@ Razón: En la metodología Kanban, una tarea no puede considerarse finalizada si
 
 ### Diagrama de estados
 
+```mermaid
 stateDiagram-v2
-[*] --> pendiente : Creador registra la tarea
+    [*] --> pendiente : Creador registra la tarea
 
     pendiente --> en_proceso : Iniciar trabajo
     en_proceso --> pendiente : Pausar / Reasignar
@@ -278,6 +281,7 @@ stateDiagram-v2
         De 'pendiente' no se pasa
         directamente a 'completado'.
     end note
+```
 
 ## 6. Roles y permisos
 
@@ -294,27 +298,34 @@ stateDiagram-v2
 | Mover tarea de columna / cambiar estado   | todos       | solo los suyos |
 | Eliminar una tarea                        | todos       | solo los suyos |
 
-## 7. Mapa de endpoints por rol4
+## 7. Mapa de endpoints por rol
 
-| Endpoint                  | Rol que lo llama         | Pantalla que lo consume      | Qué devuelve                      | Qué valida                                                                | Código si falla |
-| ------------------------- | ------------------------ | ---------------------------- | --------------------------------- | ------------------------------------------------------------------------- | --------------- |
-| POST /tareas              | propietario, colaborador | Modal Nueva Tarea            | Tarea creada con estado pendiente | Que el título no esté vacío y el usuario pertenezca al tablero            | 422             |
-| POST /tareas              | propietario, colaborador | Vista principal del Tablero  | Lista de tareas del tablero       | Que el tablero exista y el usuario tenga acceso                           | 404             |
-| PATCH /tareas/[id]        | propietario,colaborador  | Modal Editar Tarea           | Tarea actualizada                 | Si es colaborador, que la tarea sea suya; si es propietario, acceso libre | 403             |
-| PATCH /tareas/[id]/estado | propietario, colaborador | Tablero Kanban (Drag & Drop) | Tarea con el nuevo estado         | Transición válida de la máquina de estados                                | 409             |
-| DELETE /tareas/[id]       | propietario colaborador  | Modal / Botón Eliminar Tarea | Mensaje de confirmación           | Que el usuario sea el autor de la tarea o el propietario del tablero      | 403             |
+| Endpoint                  | Rol que lo llama         | Pantalla que lo consume     | Qué devuelve                      | Qué valida                                                                | Código si falla |
+| ------------------------- | ------------------------ | --------------------------- | --------------------------------- | ------------------------------------------------------------------------- | --------------- |
+| POST /tareas              | propietario, colaborador | Ventana Nueva Tarea         | Tarea creada con estado pendiente | Que el título no esté vacío y el usuario pertenezca al tablero            | 422             |
+| POST /tareas              | propietario, colaborador | Vista principal del Tablero | Lista de tareas del tablero       | Que el tablero exista y el usuario tenga acceso                           | 404             |
+| PATCH /tareas/[id]        | propietario,colaborador  | Ventana Editar Tarea        | Tarea actualizada                 | Si es colaborador, que la tarea sea suya; si es propietario, acceso libre | 403             |
+| PATCH /tareas/[id]/estado | propietario, colaborador | Tablero Kanban              | Tarea con el nuevo estado         | Transición válida de la máquina de estados                                | 409             |
+| DELETE /tareas/[id]       | propietario colaborador  | Botón Eliminar Tarea        | Mensaje de confirmación           | Que el usuario sea el autor de la tarea o el propietario del tablero      | 403             |
 
 ### Matriz pantalla × endpoint
 
-| Pantalla                     | POST /tareas | GET /tableros/[id]/tareas | PATCH /tareas/[id] | PATCH /tareas/[id]/estado | DELETE /tareas/[id] |
-| ---------------------------- | ------------ | ------------------------- | ------------------ | ------------------------- | ------------------- |
-| Vista principal del Tablero  |              | X                         |                    | X                         |                     |
-| Modal Nueva Tarea            | X            |                           |                    |                           |                     |
-| Modal Editar Tarea           |              |                           | X                  |                           |                     |
-| Modal / Botón Eliminar Tarea |              |                           |                    |                           | X                   |
+| Pantalla                    | POST /tareas | GET /tableros/[id]/tareas | PATCH /tareas/[id] | PATCH /tareas/[id]/estado | DELETE /tareas/[id] |
+| --------------------------- | ------------ | ------------------------- | ------------------ | ------------------------- | ------------------- |
+| Vista principal del Tablero |              | X                         |                    | X                         |                     |
+| Ventana Nueva Tarea         | X            |                           |                    |                           |                     |
+| Ventana Editar Tarea        |              |                           | X                  |                           |                     |
+| Botón Eliminar Tarea        |              |                           |                    |                           | X                   |
 
 **Endpoints que ya están funcionando y en qué archivo:**
+No existen por el momento enpoints que esten fucionando actualmente en nuestro sistema, se están estableciendo las ideas e implementaciones futuras.
+Pero estas serían la rutas que hemos establecido:
+POST /tareas -> internal/handlers/tarea_handler.go (CrearTareaHandler)
+GET /tableros/[id]/tareas -> internal/handlers/tarea_handler.go (ObtenerTareasPorTableroHandler)
+PATCH /tareas/[id] -> internal/handlers/tarea_handler.go (ActualizarTareaHandler)
+PATCH /tareas/[id]/estado -> internal/handlers/tarea_handler.go (CambiarEstadoTareaHandler)
+DELETE /tareas/[id] -> internal/handlers/tarea_handler.go (EliminarTareaHandler)
 
 ## 8. Declaración de IA
 
-<!-- Qué herramienta y para qué sección. Si no usaron ninguna, díganlo. -->
+IA: Gemini, secciones 4, 6, 7, A
