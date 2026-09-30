@@ -5,6 +5,7 @@
 
 ## A. Estructura del proyecto
 
+```text
 Notix-Backend/
 ├── cmd/
 │ └── api/
@@ -30,12 +31,12 @@ Notix-Backend/
 ├── docs/
 │ ├── hito1_ficha_del_negocio.md # Documento formal de la Ficha del Negocio para el Hito 1.
 │ ├── hito1_addendum.md # Anexo documental con especificaciones y diagramas adicionales.
-│ └── hito1_modelo.png # Imagen exportada del diagrama Entidad-Relación de la base de datos.
 ├── .env # Archivo local con variables de entorno y credenciales reales (ignorado en Git).
 ├── .env.example # Plantilla de ejemplo de variables de entorno sin datos sensibles para el repositorio.
 ├── go.mod # Archivo de definición de módulos y dependencias de Go.
 ├── go.sum # Registro de sumas de verificación de seguridad para dependencias de Go.
 └── README.md # Guía de instalación, ejecución local y documentación general del proyecto.
+```
 
 ## B. Configuración y secretos
 
