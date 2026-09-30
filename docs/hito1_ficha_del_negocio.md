@@ -2,7 +2,7 @@
 
 **Pareja:** Maholy García · Brittany García
 **Paralelo:** Aplicación para el Servidor Web A
-**Negocio en una línea:** Plataforma web de notas visuales organizadas en tableros Kanban, dirigida a estudiantes, trabajadores y pequeños equipos.
+**Negocio en una línea:** Notix plataforma web de notas visuales organizadas en tableros Kanban, dirigida a estudiantes, trabajadores y pequeños equipos.
 
 ## 1. Negocio de referencia
 
@@ -57,19 +57,18 @@ Por las restricciones sobre la privacidad de usuarios (Restricción 1) y el cont
 | tablero_id | referencia a Tablero | sí          | 12        |
 | nombre     | texto                | sí          | Por Hacer |
 | orden      | número entero        | sí          | 1         |
-| tablero_id | texto                | sí          | 10        |
 
 ### Entidad: Tarea
 
-| Atributo   | Tipo                                      | Obligatorio | Ejemplo          |
-| ---------- | ----------------------------------------- | ----------- | ---------------- |
-| id         | número entero                             | sí          | 2                |
-| columna_id | referencia a Columna                      | sí          | 201              |
-| usuario_id | referencia a Usuario                      | sí          | 2                |
-| titulo     | texto                                     | sí          | Botón CSV        |
-| contenido  | número entero                             | no          | Diseñar Exportar |
-| estado     | uno de: pendiente, en_proceso, completado | sí          | pendiente        |
-| creado     | fecha y hora                              | sí          | 28-09-2026 15:30 |
+| Atributo   | Tipo                                      | Obligatorio | Ejemplo            |
+| ---------- | ----------------------------------------- | ----------- | ------------------ |
+| id         | número entero                             | sí          | 2                  |
+| columna_id | referencia a Columna                      | sí          | 201                |
+| usuario_id | referencia a Usuario                      | sí          | 2                  |
+| titulo     | texto                                     | sí          | Botón CSV          |
+| contenido  | número entero                             | no          | Diseñar y exportar |
+| estado     | uno de: pendiente, en_proceso, completado | sí          | pendiente          |
+| creado     | fecha y hora                              | sí          | 28-09-2026 15:30   |
 
 ### Entidad: TableroCompartido
 
@@ -303,9 +302,9 @@ stateDiagram-v2
 | Endpoint                  | Rol que lo llama         | Pantalla que lo consume     | Qué devuelve                      | Qué valida                                                                | Código si falla |
 | ------------------------- | ------------------------ | --------------------------- | --------------------------------- | ------------------------------------------------------------------------- | --------------- |
 | POST /tareas              | propietario, colaborador | Ventana Nueva Tarea         | Tarea creada con estado pendiente | Que el título no esté vacío y el usuario pertenezca al tablero            | 422             |
-| POST /tareas              | propietario, colaborador | Vista principal del Tablero | Lista de tareas del tablero       | Que el tablero exista y el usuario tenga acceso                           | 404             |
+| GET /tableros/[id]/tareas | propietario, colaborador | Vista principal del Tablero | Lista de tareas del tablero       | Que el tablero exista y el usuario tenga acceso                           | 404             |
 | PATCH /tareas/[id]        | propietario,colaborador  | Ventana Editar Tarea        | Tarea actualizada                 | Si es colaborador, que la tarea sea suya; si es propietario, acceso libre | 403             |
-| PATCH /tareas/[id]/estado | propietario, colaborador | Tablero Kanban              | Tarea con el nuevo estado         | Transición válida de la máquina de estados                                | 409             |
+| PATCH /tareas/[id]/estado | propietario, colaborador | Vista principal del Tablero | Tarea con el nuevo estado         | Transición válida de la máquina de estados                                | 409             |
 | DELETE /tareas/[id]       | propietario colaborador  | Botón Eliminar Tarea        | Mensaje de confirmación           | Que el usuario sea el autor de la tarea o el propietario del tablero      | 403             |
 
 ### Matriz pantalla × endpoint
@@ -318,13 +317,16 @@ stateDiagram-v2
 | Botón Eliminar Tarea        |              |                           |                    |                           | X                   |
 
 **Endpoints que ya están funcionando y en qué archivo:**
-No existen por el momento enpoints que esten fucionando actualmente en nuestro sistema, se están estableciendo las ideas e implementaciones futuras.
+No existen por el momento endpoints que esten fucionando actualmente en nuestro sistema, se están estableciendo las ideas e implementaciones futuras.
 Pero estas serían la rutas que hemos establecido:
+
+```text
 POST /tareas -> internal/handlers/tarea_handler.go (CrearTareaHandler)
 GET /tableros/[id]/tareas -> internal/handlers/tarea_handler.go (ObtenerTareasPorTableroHandler)
 PATCH /tareas/[id] -> internal/handlers/tarea_handler.go (ActualizarTareaHandler)
 PATCH /tareas/[id]/estado -> internal/handlers/tarea_handler.go (CambiarEstadoTareaHandler)
 DELETE /tareas/[id] -> internal/handlers/tarea_handler.go (EliminarTareaHandler)
+```
 
 ## 8. Declaración de IA
 
