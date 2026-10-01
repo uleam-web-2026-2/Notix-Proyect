@@ -55,14 +55,15 @@ Notix-Backend/
 
 <!-- Cuántas pruebas tienen y qué caso cubre cada una. Después, la captura de la corrida. -->
 
-| Prueba | Qué caso cubre |
-| **TestCrearTarea_Exito** | Evalúa `POST /tareas`. Verifica que un propietario o colaborador pueda registrar una tarea y que esta devuelva el estado inicial "pendiente".|
-| **TestCrearTarea_TituloVacio** | Evalúa `POST /tareas`. Comprueba la validación del sistema asegurando que devuelva error si el título de la tarea está vacío.|
-| **TestListarTareas_TableroInvalido** | Evalúa `GET /tableros/[id]/tareas`. Valida que el endpoint devuelva un error adecuado si se intenta consultar un tablero que no existe.|
-| **TestListarTareas_Exito** | Evalúa `GET /tableros/[id]/tareas`. Confirma que la vista principal reciba correctamente la lista de tareas si el tablero existe y el usuario tiene acceso.|
-| **TestEditarTarea_ColaboradorNoAutorizado** | Evalúa `PATCH /tareas/[id]`. Asegura que la API bloquee la acción si un colaborador intenta editar el título o contenido de una tarea de la cual no es autor.|
-| **TestActualizarEstado_TransicionInvalida** | Evalúa `PATCH /tareas/[id]/estado`. Verifica que el sistema rechace el cambio si se intenta una transición de estado que no es válida para la regla de negocio.|
-| **TestEliminarTarea_Exito** | Evalúa `DELETE /tareas/[id]`. Comprueba que un usuario con los permisos correctos (autor o propietario) pueda borrar la tarea y reciba un mensaje de confirmación.|
+| Prueba                                        | Qué caso cubre                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **TestCrearTarea_Exito**                      | Evalúa `POST /tareas`. Verifica que un propietario o colaborador pueda registrar una tarea y que esta devuelva el estado inicial "pendiente".                            |
+| **TestCrearTarea_TituloVacio**                | Evalúa `POST /tareas`. Comprueba la validación del sistema asegurando que devuelva error si el título de la tarea está vacío.                                            |
+| **TestListarTareas_TableroInvalido**          | Evalúa `GET /tableros/[id]/tareas`. Valida que el endpoint devuelva un error adecuado si se intenta consultar un tablero que no existe.                                  |
+| **TestListarTareas_Exito**                    | Evalúa `GET /tableros/[id]/tareas`. Confirma que la vista principal reciba correctamente la lista de tareas si el tablero existe y el usuario tiene acceso.              |
+| **TestEditarTarea_ColaboradorNoAutorizado**   | Evalúa `PATCH /tareas/[id]`. Asegura que la API bloquee la acción si un colaborador intenta editar el título o contenido de una tarea de la cual no es autor.            |
+| **TestActualizarEstado_TransicionInvalida**   | Evalúa `PATCH /tareas/[id]/estado`. Verifica que el sistema rechace el cambio si se intenta una transición de estado que no es válida para la regla de negocio.          |
+| **TestEliminarTarea_Exito**                   | Evalúa `DELETE /tareas/[id]`. Comprueba que un usuario con los permisos correctos (autor o propietario) pueda borrar la tarea y reciba un mensaje de confirmación.       |
 
 **Captura de `go test ./...`:** ![Pruebas](hito1_pruebas.png)
 
