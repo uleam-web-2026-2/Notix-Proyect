@@ -7,14 +7,21 @@
 ## 1. Negocio de referencia
 
 <!-- Caso de Starter Story: qué vende, a quién, cómo cobra y qué cifras declara el fundador. 120 a 200 palabras. -->
+Trello
+Un software SaaS de gestión de proyectos y tareas, basado en la metodología Kanban que permite organizar flujos de trabajo de manera intuitiva y asíncrona. Sirve a profesionales independientes y estudiantes, hasta departamentos enteros de marketing, recursos humanos y desarrollo en grandes corporaciones.
+Utiliza un modelo free-premium. El producto central es gratuito, lo que fomenta la adopción viral. Monetiza cobrando suscripciones mensuales por usuario (planes Premium y Enterprise) a las empresas que requieren funcionalidades avanzadas, como controles de administración estrictos, automatizaciones ilimitadas e integraciones de software.
+El cofundador Michael Pryor ha explicado que la meta inicial era alcanzar 100 millones de usuarios priorizando la adopción sobre los ingresos. Esta estrategia de tracción masiva llevó a que, en 2017, Atlassian adquiriera Trello por 425 millones de dólares cuando contaban con 19 millones de usuarios registrados, validando el éxito de su penetración de mercado.
 
-**Enlace:** (video o artículo)
+**Enlace:** [(video o artículo)](https://techcrunch.com/2017/01/09/atlassian-acquires-trello/)
+https://trello.com/es/home
 
 ## 2. Caso de contraste
 
 <!-- Un negocio comparable que fracasó o se estancó, y su hipótesis sobre por qué. La hipótesis señala una diferencia de fondo (modelo de cobro, costos, mercado), no una anécdota. 100 a 180 palabras. -->
-
-**Fuente:** (enlace)
+Wunderlist
+Wunderlist ofrecía una versión gratuita tan completa que desincentivaba la actualización. Sus características de pago estaban dirigidas mayoritariamente al consumidor final (B2C), un segmento con bajísima disposición a pagar por aplicaciones de productividad. Mientras su base de usuarios gratuitos crecía exponencialmente hasta los 13 millones, los costos de infraestructura en la nube para mantener la sincronización en tiempo real se dispararon.
+A diferencia de Trello, que monetizó exitosamente el mercado empresarial (B2B) vendiendo seguridad y escalabilidad a equipos corporativos, Wunderlist nunca logró crear un puente sólido hacia el sector B2B. Sin flujo de caja para sostener sus altos costos operativos, la compañía se estancó y fue absorbida por Microsoft.
+**Fuente:** [(enlace)](https://www.businessinsider.com/microsoft-acquisition-of-wunderlist-2015-6)
 
 ## 3. Adaptación al Ecuador
 
@@ -22,7 +29,8 @@
 
 1. Cuando un usuario comparte una nota o tablero con otra persona usando su correo, si el servidor no verifica correctamente los permisos en cada petición, la persona invitada podría terminar viendo otros tableros privados del creador. Esto sucede en el backend durante la consulta de notas y provoca la filtración de información privada o académica entre los mismos usuarios del sistema.
 2. Al registrar a las personas con su nombre y correo electrónico dentro de la plataforma, si no se maneja la privacidad adecuadamente, cualquier usuario podría averiguar la lista completa de correos registrados intentando compartir un tablero. Esto ocurre en la pantalla de "Compartir Tablero" y provoca que se expongan datos personales de los usuarios a personas desconocidas dentro del sistema.
-3.
+3. Cuando dos usuarios diferentes intentan editar el texto de la misma tarjeta exactamente al mismo tiempo, los cambios del último en guardar sobrescriben y borran los del primero si el servidor no implementa un control de concurrencia. Esto sucede en el modal de edición de tareas y en el endpoint de actualización del servidor, y tiene como efecto la pérdida silenciosa de información y el trabajo desperdiciado del equipo.
+4. Cuando un integrante con permisos de "Solo lectura" manipula la petición para mover una tarjeta a "Aprobado" y el backend no verifica su rol antes de guardar el estado en la base de datos. Esto ocurre durante el evento de arrastrar y soltar hacia la API, y tiene como efecto la alteración ilegítima del flujo de trabajo. En Ecuador, la falta de estos controles lógicos de acceso no solo viola la obligación de seguridad de la LOPDP (Art. 38 y 40) para evitar accesos no autorizados, sino que la alteración intencional de datos por parte del usuario malicioso constituye un delito de Ataque a la integridad de sistemas informáticos tipificado en el Código Orgánico Integral Penal (COIP, Art. 232).
 
 **Qué cambió en el modelo por estas restricciones:**
 Por las restricciones sobre la privacidad de usuarios (Restricción 1) y el control de accesos al consultar tableros (Restricción 2), se modificó el modelo agregando la entidad TableroCompartido con un atributo de permiso (RolEnTablero) y el estado de la vinculación (activo o pendiente)
