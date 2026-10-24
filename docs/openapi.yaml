@@ -1,0 +1,719 @@
+openapi: 3.1.0
+info:
+  title: Notix API
+  version: 1.0.0
+  description: API del Hito 2. Las operaciones marcadas (plan) se implementarán después del hito.
+  license:
+    name: Notix student project
+    identifier: LicenseRef-Notix-Project
+servers:
+  - url: http://127.0.0.1:8080
+tags:
+  - name: Autenticación
+    description: Inicio de sesión y disponibilidad.
+  - name: Tareas
+    description: Operaciones de la entidad principal y su máquina de estados.
+  - name: Tableros
+    description: Operaciones planificadas de tableros.
+  - name: Columnas
+    description: Operaciones planificadas de columnas Kanban.
+  - name: Compartidos
+    description: Invitaciones y permisos planificados.
+  - name: Comentarios
+    description: Operaciones planificadas de comentarios.
+security:
+  - bearerAuth: []
+paths:
+  /login:
+    post:
+      operationId: login
+      tags: [Autenticación]
+      summary: Iniciar sesión
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Sesión iniciada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /tableros/{tableroID}/tareas:
+    parameters:
+      - $ref: "#/components/parameters/TableroID"
+    get:
+      operationId: listarTareasPorTablero
+      tags: [Tareas]
+      summary: Listar tareas de un tablero
+      responses:
+        "200":
+          description: Tareas visibles para el usuario autenticado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tarea"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /tareas:
+    post:
+      operationId: crearTarea
+      tags: [Tareas]
+      summary: Crear tarea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TareaCreate"
+      responses:
+        "201":
+          description: Tarea creada en estado pendiente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tarea"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /tareas/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      operationId: obtenerTarea
+      tags: [Tareas]
+      summary: Ver una tarea
+      responses:
+        "200":
+          description: Tarea encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tarea"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: actualizarTarea
+      tags: [Tareas]
+      summary: Editar título o contenido de tarea (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TareaUpdate"
+      responses:
+        "200":
+          description: Tarea actualizada.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+    delete:
+      operationId: eliminarTarea
+      tags: [Tareas]
+      summary: Eliminar tarea (plan)
+      responses:
+        "204":
+          description: Tarea eliminada.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /tareas/{id}/estado:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    patch:
+      operationId: cambiarEstadoTarea
+      tags: [Tareas]
+      summary: Cambiar estado de tarea
+      description: Solo el propietario del tablero puede cambiarlo. La transición pendiente → completado no está permitida.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambiarEstadoRequest"
+      responses:
+        "200":
+          description: Estado actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tarea"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /tableros:
+    get:
+      operationId: listarTableros
+      tags: [Tableros]
+      summary: Listar tableros accesibles (plan)
+      responses:
+        "200":
+          description: (plan) Lista de tableros.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tablero"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: crearTablero
+      tags: [Tableros]
+      summary: Crear tablero (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableroCreate"
+      responses:
+        "201":
+          description: (plan) Tablero creado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tablero"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /tableros/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      operationId: obtenerTablero
+      tags: [Tableros]
+      summary: Consultar tablero (plan)
+      responses:
+        "200":
+          description: (plan) Tablero encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tablero"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: actualizarTablero
+      tags: [Tableros]
+      summary: Actualizar tablero (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableroUpdate"
+      responses:
+        "200":
+          description: (plan) Tablero actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tablero"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: eliminarTablero
+      tags: [Tableros]
+      summary: Eliminar tablero (plan)
+      responses:
+        "204":
+          description: (plan) Tablero eliminado.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /tableros/{tableroID}/columnas:
+    parameters:
+      - $ref: "#/components/parameters/TableroID"
+    post:
+      operationId: crearColumna
+      tags: [Columnas]
+      summary: Crear columna (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ColumnaCreate"
+      responses:
+        "201":
+          description: (plan) Columna creada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Columna"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /columnas/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    patch:
+      operationId: actualizarColumna
+      tags: [Columnas]
+      summary: Actualizar u ordenar columna (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ColumnaUpdate"
+      responses:
+        "200":
+          description: (plan) Columna actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Columna"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: eliminarColumna
+      tags: [Columnas]
+      summary: Eliminar columna (plan)
+      responses:
+        "204":
+          description: (plan) Columna eliminada.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /tableros/{tableroID}/compartidos:
+    parameters:
+      - $ref: "#/components/parameters/TableroID"
+    get:
+      operationId: listarCompartidos
+      tags: [Compartidos]
+      summary: Listar invitaciones del tablero (plan)
+      responses:
+        "200":
+          description: (plan) Invitaciones y roles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TableroCompartido"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: compartirTablero
+      tags: [Compartidos]
+      summary: Invitar colaborador (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableroCompartidoCreate"
+      responses:
+        "201":
+          description: (plan) Invitación creada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableroCompartido"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /compartidos/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    delete:
+      operationId: revocarCompartido
+      tags: [Compartidos]
+      summary: Revocar invitación (plan)
+      responses:
+        "204":
+          description: (plan) Acceso revocado.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /tareas/{id}/comentarios:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      operationId: listarComentarios
+      tags: [Comentarios]
+      summary: Listar comentarios de una tarea (plan)
+      responses:
+        "200":
+          description: (plan) Comentarios de la tarea.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comentario"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: crearComentario
+      tags: [Comentarios]
+      summary: Crear comentario en una tarea (plan)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComentarioCreate"
+      responses:
+        "201":
+          description: (plan) Comentario creado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /usuarios/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      operationId: obtenerUsuario
+      tags: [Autenticación]
+      summary: Consultar usuario (plan)
+      responses:
+        "200":
+          description: (plan) Usuario encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    TableroID:
+      name: tableroID
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+  responses:
+    Unauthorized:
+      description: Falta token o no es válido.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: El usuario no tiene permiso para esta acción.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: No se encontró el recurso.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: El recurso cambió concurrentemente.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UnprocessableEntity:
+      description: Los datos o la transición no cumplen las reglas de negocio.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    LoginRequest:
+      type: object
+      required: [correo, clave]
+      properties:
+        correo:
+          type: string
+          format: email
+        clave:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      required: [token, token_type, expires_at, usuario]
+      properties:
+        token:
+          type: string
+        token_type:
+          type: string
+          const: Bearer
+        expires_at:
+          type: string
+          format: date-time
+        usuario:
+          type: object
+          required: [id, nombre, correo, rol]
+          properties:
+            id:
+              type: integer
+            nombre:
+              type: string
+            correo:
+              type: string
+              format: email
+            rol:
+              type: string
+              enum: [propietario, colaborador]
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        correo:
+          type: string
+          format: email
+        creado:
+          type: string
+          format: date-time
+    Tablero:
+      type: object
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        descripcion:
+          type: string
+        creador_id:
+          type: integer
+        creado:
+          type: string
+          format: date-time
+    TableroCreate:
+      type: object
+      required: [titulo]
+      properties:
+        titulo:
+          type: string
+        descripcion:
+          type: string
+    TableroUpdate:
+      type: object
+      properties:
+        titulo:
+          type: string
+        descripcion:
+          type: string
+    Columna:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        orden:
+          type: integer
+        tablero_id:
+          type: integer
+    ColumnaCreate:
+      type: object
+      required: [nombre, orden]
+      properties:
+        nombre:
+          type: string
+        orden:
+          type: integer
+    ColumnaUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+        orden:
+          type: integer
+    Tarea:
+      type: object
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        contenido:
+          type: string
+        estado:
+          type: string
+          enum: [pendiente, en_proceso, completado]
+        columna_id:
+          type: integer
+        creador_id:
+          type: integer
+        creado:
+          type: string
+          format: date-time
+    TareaCreate:
+      type: object
+      required: [titulo, columna_id]
+      properties:
+        titulo:
+          type: string
+          maxLength: 150
+        contenido:
+          type: string
+          maxLength: 5000
+        columna_id:
+          type: integer
+          minimum: 1
+    TareaUpdate:
+      type: object
+      properties:
+        titulo:
+          type: string
+        contenido:
+          type: string
+    CambiarEstadoRequest:
+      type: object
+      required: [estado]
+      properties:
+        estado:
+          type: string
+          enum: [pendiente, en_proceso, completado]
+    TableroCompartido:
+      type: object
+      properties:
+        id:
+          type: integer
+        tablero_id:
+          type: integer
+        usuario_id:
+          type: integer
+        rol_en_tablero:
+          type: string
+          enum: [propietario, colaborador]
+        estado_invitacion:
+          type: string
+          enum: [pendiente, activo, revocado]
+        agregado:
+          type: string
+          format: date-time
+    TableroCompartidoCreate:
+      type: object
+      required: [usuario_id]
+      properties:
+        usuario_id:
+          type: integer
+          minimum: 1
+    Comentario:
+      type: object
+      properties:
+        id:
+          type: integer
+        texto:
+          type: string
+        tarea_id:
+          type: integer
+        autor_id:
+          type: integer
+        creado:
+          type: string
+          format: date-time
+    ComentarioCreate:
+      type: object
+      required: [texto]
+      properties:
+        texto:
+          type: string
+          maxLength: 2000
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string

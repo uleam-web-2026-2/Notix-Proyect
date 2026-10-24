@@ -1,0 +1,56 @@
+meta {
+  name: 0 Preparar demo
+  type: http
+  seq: 0
+}
+
+post {
+  url: {{baseUrl}}/tareas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{collaboratorToken}}
+}
+
+script:pre-request {
+  const baseUrl = bru.getEnvVar("baseUrl");
+
+  const login = async (correo, clave) => {
+    const response = await bru.sendRequest({
+      method: "POST",
+      url: `${baseUrl}/login`,
+      headers: { "Content-Type": "application/json" },
+      data: { correo, clave }
+    });
+    if (response.status !== 200 || !response.data?.token) {
+      throw new Error(`No se pudo iniciar sesión para ${correo}`);
+    }
+    return response.data.token;
+  };
+
+  bru.setEnvVar("collaboratorToken", await login("colaborador@notix.test", "Colab-demo-2026"));
+  bru.setEnvVar("ownerToken", await login("propietaria@notix.test", "Prop-demo-2026"));
+}
+
+body:json {
+  {
+    "titulo": "Tarea nueva para la demostración",
+    "contenido": "Este registro se usará una sola vez en las peticiones 4 y 5.",
+    "columna_id": {{ownerColumnId}}
+  }
+}
+
+script:post-response {
+  if (res.status !== 201 || !res.body?.id) {
+    throw new Error("La preparación no creó la tarea de demostración.");
+  }
+  bru.setEnvVar("taskId", String(res.body.id));
+}
+
+tests {
+  test("La preparación crea una tarea nueva", function() {
+    expect(res.status).to.equal(201);
+  });
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 3 Listar tareas
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/tableros/{{boardId}}/tareas
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:post-response {
+  const forbiddenTask = res.body.find((task) => task.titulo === "DEMO: transición prohibida");
+  if (!forbiddenTask) {
+    throw new Error("No se encontró la tarea reservada para la transición prohibida.");
+  }
+  bru.setEnvVar("forbiddenTaskId", String(forbiddenTask.id));
+}
+
+tests {
+  test("El usuario autenticado puede listar las tareas del tablero", function() {
+    expect(res.status).to.equal(200);
+  });
+}

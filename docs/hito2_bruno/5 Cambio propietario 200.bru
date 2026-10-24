@@ -1,0 +1,27 @@
+meta {
+  name: 5 Cambio propietario 200
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/tareas/{{taskId}}/estado
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+body:json {
+  {
+    "estado": "en_proceso"
+  }
+}
+
+tests {
+  test("El propietario autorizado cambia el estado", function() {
+    expect(res.status).to.equal(200);
+  });
+}

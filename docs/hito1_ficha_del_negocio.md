@@ -6,7 +6,6 @@
 
 ## 1. Negocio de referencia
 
-<!-- Caso de Starter Story: qué vende, a quién, cómo cobra y qué cifras declara el fundador. 120 a 200 palabras. -->
 Trello
 Un software SaaS de gestión de proyectos y tareas, basado en la metodología Kanban que permite organizar flujos de trabajo de manera intuitiva y asíncrona. Sirve a profesionales independientes y estudiantes, hasta departamentos enteros de marketing, recursos humanos y desarrollo en grandes corporaciones.
 Utiliza un modelo free-premium. El producto central es gratuito, lo que fomenta la adopción viral. Monetiza cobrando suscripciones mensuales por usuario (planes Premium y Enterprise) a las empresas que requieren funcionalidades avanzadas, como controles de administración estrictos, automatizaciones ilimitadas e integraciones de software.
@@ -17,15 +16,12 @@ https://trello.com/es/home
 
 ## 2. Caso de contraste
 
-<!-- Un negocio comparable que fracasó o se estancó, y su hipótesis sobre por qué. La hipótesis señala una diferencia de fondo (modelo de cobro, costos, mercado), no una anécdota. 100 a 180 palabras. -->
 Wunderlist
 Wunderlist ofrecía una versión gratuita tan completa que desincentivaba la actualización. Sus características de pago estaban dirigidas mayoritariamente al consumidor final (B2C), un segmento con bajísima disposición a pagar por aplicaciones de productividad. Mientras su base de usuarios gratuitos crecía exponencialmente hasta los 13 millones, los costos de infraestructura en la nube para mantener la sincronización en tiempo real se dispararon.
 A diferencia de Trello, que monetizó exitosamente el mercado empresarial (B2B) vendiendo seguridad y escalabilidad a equipos corporativos, Wunderlist nunca logró crear un puente sólido hacia el sector B2B. Sin flujo de caja para sostener sus altos costos operativos, la compañía se estancó y fue absorbida por Microsoft.
 **Fuente:** [(enlace)](https://www.businessinsider.com/microsoft-acquisition-of-wunderlist-2015-6)
 
 ## 3. Adaptación al Ecuador
-
-<!-- Al menos tres restricciones concretas. Cada una dice qué pasa, dónde y qué efecto tiene. -->
 
 1. Cuando un usuario comparte una nota o tablero con otra persona usando su correo, si el servidor no verifica correctamente los permisos en cada petición, la persona invitada podría terminar viendo otros tableros privados del creador. Esto sucede en el backend durante la consulta de notas y provoca la filtración de información privada o académica entre los mismos usuarios del sistema.
 2. Al registrar a las personas con su nombre y correo electrónico dentro de la plataforma, si no se maneja la privacidad adecuadamente, cualquier usuario podría averiguar la lista completa de correos registrados intentando compartir un tablero. Esto ocurre en la pantalla de "Compartir Tablero" y provoca que se expongan datos personales de los usuarios a personas desconocidas dentro del sistema.
@@ -260,10 +256,10 @@ Razón: Para manejar la colaboración de forma segura, necesitamos guardar permi
 
 | De         | A          | Quién la hace             | Condición                                                        |
 | ---------- | ---------- | ------------------------- | ---------------------------------------------------------------- |
-| pendiente  | en_proceso | Propietario o Colaborador | Iniciar la ejecución de la tarea asignada.                       |
-| en_proceso | pendiente  | Propietario o Colaborador | Pausar la actividad o reasignar el trabajo a otra persona.       |
-| en_proceso | completado | Propietario o Colaborador | Confirmar la finalización total del contenido de la tarea.       |
-| completado | en_proceso | Propietario o Colaborador | Reabrir la tarea por correcciones, cambios o revisión requerida. |
+| pendiente  | en_proceso | Propietario                | Iniciar la ejecución de la tarea asignada.                       |
+| en_proceso | pendiente  | Propietario                | Pausar la actividad o reasignar el trabajo a otra persona.       |
+| en_proceso | completado | Propietario                | Confirmar la finalización total del contenido de la tarea.       |
+| completado | en_proceso | Propietario                | Reabrir la tarea por correcciones, cambios o revisión requerida. |
 
 **Transición prohibida y por qué:**
 De pendiente no se puede pasar directamente a completado.
@@ -302,7 +298,7 @@ stateDiagram-v2
 | Crear tareas en cualquier columna         | sí          | sí             |
 | Ver tareas del tablero                    | todos       | todos          |
 | Editar título o contenido de una tarea    | todos       | solo los suyos |
-| Mover tarea de columna / cambiar estado   | todos       | solo los suyos |
+| Mover tarea de columna / cambiar estado   | sí          | No             |
 | Eliminar una tarea                        | todos       | solo los suyos |
 
 ## 7. Mapa de endpoints por rol
@@ -312,7 +308,7 @@ stateDiagram-v2
 | POST /tareas              | propietario, colaborador | Ventana Nueva Tarea         | Tarea creada con estado pendiente | Que el título no esté vacío y el usuario pertenezca al tablero            | 422             |
 | GET /tableros/[id]/tareas | propietario, colaborador | Vista principal del Tablero | Lista de tareas del tablero       | Que el tablero exista y el usuario tenga acceso                           | 404             |
 | PATCH /tareas/[id]        | propietario,colaborador  | Ventana Editar Tarea        | Tarea actualizada                 | Si es colaborador, que la tarea sea suya; si es propietario, acceso libre | 403             |
-| PATCH /tareas/[id]/estado | propietario, colaborador | Vista principal del Tablero | Tarea con el nuevo estado         | Transición válida de la máquina de estados                                | 409             |
+| PATCH /tareas/[id]/estado | propietario | Vista principal del Tablero | Tarea con el nuevo estado         | Solo el propietario puede cambiar el estado y la transición debe ser válida | 403 / 422       |
 | DELETE /tareas/[id]       | propietario colaborador  | Botón Eliminar Tarea        | Mensaje de confirmación           | Que el usuario sea el autor de la tarea o el propietario del tablero      | 403             |
 
 ### Matriz pantalla × endpoint
@@ -324,16 +320,19 @@ stateDiagram-v2
 | Ventana Editar Tarea        |              |                           | X                  |                           |                     |
 | Botón Eliminar Tarea        |              |                           |                    |                           | X                   |
 
-**Endpoints que ya están funcionando y en qué archivo:**
-No existen por el momento endpoints que esten fucionando actualmente en nuestro sistema, se están estableciendo las ideas e implementaciones futuras.
-Pero estas serían la rutas que hemos establecido:
+**Endpoints del Hito 2 y en qué archivo:**
+Al entregar el Hito 1 todavía no había endpoints implementados. Para el Hito 2,
+la API implementa las operaciones mínimas de `Tarea`, autenticación y
+autorización. La edición y eliminación de tareas quedan planificadas.
 
 ```text
-POST /tareas -> internal/handlers/tarea_handler.go (CrearTareaHandler)
-GET /tableros/[id]/tareas -> internal/handlers/tarea_handler.go (ObtenerTareasPorTableroHandler)
-PATCH /tareas/[id] -> internal/handlers/tarea_handler.go (ActualizarTareaHandler)
-PATCH /tareas/[id]/estado -> internal/handlers/tarea_handler.go (CambiarEstadoTareaHandler)
-DELETE /tareas/[id] -> internal/handlers/tarea_handler.go (EliminarTareaHandler)
+POST /login -> internal/handlers/auth_handler.go (Login)
+GET /tableros/{tableroID}/tareas -> internal/handlers/tarea_handler.go (ListByBoard)
+GET /tareas/{id} -> internal/handlers/tarea_handler.go (Get)
+POST /tareas -> internal/handlers/tarea_handler.go (Create)
+PATCH /tareas/{id}/estado -> internal/handlers/tarea_handler.go (ChangeState)
+PATCH /tareas/{id} -> plan (docs/openapi.yaml)
+DELETE /tareas/{id} -> plan (docs/openapi.yaml)
 ```
 
 ## 8. Declaración de IA

@@ -1,0 +1,27 @@
+meta {
+  name: 6 Transicion prohibida 422
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/tareas/{{forbiddenTaskId}}/estado
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+body:json {
+  {
+    "estado": "completado"
+  }
+}
+
+tests {
+  test("La transición pendiente a completado responde 422", function() {
+    expect(res.status).to.equal(422);
+  });
+}

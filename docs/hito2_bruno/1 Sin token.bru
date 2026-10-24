@@ -1,0 +1,17 @@
+meta {
+  name: 1 Sin token
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/tableros/{{boardId}}/tareas
+  body: none
+  auth: none
+}
+
+tests {
+  test("Una ruta protegida sin token responde 401", function() {
+    expect(res.status).to.equal(401);
+  });
+}

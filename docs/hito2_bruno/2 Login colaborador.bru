@@ -1,0 +1,32 @@
+meta {
+  name: 2 Login colaborador
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "correo": "colaborador@notix.test",
+    "clave": "Colab-demo-2026"
+  }
+}
+
+script:post-response {
+  if (res.status !== 200 || !res.body?.token) {
+    throw new Error("El inicio de sesión no devolvió un token.");
+  }
+  bru.setEnvVar("token", res.body.token);
+  bru.setEnvVar("collaboratorToken", res.body.token);
+}
+
+tests {
+  test("El login devuelve un token", function() {
+    expect(res.status).to.equal(200);
+  });
+}
