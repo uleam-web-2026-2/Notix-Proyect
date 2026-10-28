@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Notix · Hito 2</title>
+  <style>
+    :root { color-scheme: light; --ink:#1f2937; --muted:#526174; --line:#d8e0ea; --accent:#174a78; --soft:#eef4fa; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#f7f9fc; }
+    main { max-width:1050px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    h1,h2,h3 { line-height:1.2; color:#173c62; }
+    h1 { margin-bottom:.3rem; } h2 { margin-top:2.3rem; border-bottom:1px solid var(--line); padding-bottom:.45rem; }
+    p,li { max-width:85ch; } code,pre { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+    code { background:var(--soft); padding:.1rem .3rem; border-radius:4px; }
+    pre { overflow:auto; padding:1rem; background:#172333; color:#f4f7fb; border-radius:8px; }
+    pre code { padding:0; color:inherit; background:none; }
+    table { width:100%; border-collapse:collapse; margin:1rem 0 1.5rem; background:white; }
+    th,td { border:1px solid var(--line); padding:.65rem .75rem; text-align:left; vertical-align:top; }
+    th { background:#e8eef6; color:#173c62; }
+    .muted { color:var(--muted); } .callout { padding:1rem; background:var(--soft); border-left:4px solid var(--accent); }
+    .method { white-space:nowrap; font-weight:700; } footer { margin-top:3rem; color:var(--muted); font-size:.9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>API Notix</h1>
+    <p>Referencia de la API implementada en el backend de Notix. La entidad central es <strong>Tarea</strong>, organizada en columnas y tableros.</p>
+    <p class="muted">Base local indicada por la configuración del proyecto: <code>http://localhost:8080</code>.</p>
+  </header>
+
+  <section aria-labelledby="tech">
+    <h2 id="tech">Tecnologías y alcance</h2>
+    <ul>
+      <li>Go 1.23+, <code>net/http</code> con <code>ServeMux</code>, GORM y PostgreSQL.</li>
+      <li>Autenticación JWT (firma HS256) y contraseñas almacenadas con bcrypt.</li>
+      <li>La API publica las rutas enumeradas en esta página. Otras operaciones descritas como planificadas en <code>docs/openapi.yaml</code> no están registradas en el router.</li>
+    </ul>
+    <p class="callout">Las rutas se verificaron en <code>internal/httpapi/router.go</code>. No se documentan como disponibles las operaciones planificadas de tableros, columnas, compartir, comentarios o CRUD adicional.</p>
+  </section>
+
+  <section aria-labelledby="auth">
+    <h2 id="auth">Autenticación y permisos</h2>
+    <p><code>POST /login</code> recibe correo y clave. Si son válidos, responde con un JWT Bearer, su expiración y el usuario con su rol. El token incluye el identificador y rol; la duración se configura mediante <code>TOKEN_TTL</code> (por defecto, 8 horas).</p>
+    <p>Para rutas protegidas envía <code>Authorization: Bearer &lt;token&gt;</code>. El propietario y el colaborador con invitación activa pueden consultar tareas del tablero. Ambos pueden crear tareas en un tablero al que tienen acceso; solo el propietario puede cambiar estados.</p>
+    <h3>Iniciar sesión</h3>
+    <pre><code>curl -i -X POST http://localhost:8080/login \
+  -H 'Content-Type: application/json' \
+  -d '{"correo":"propietaria@notix.test","clave":"Prop-demo-2026"}'</code></pre>
+    <p>La inicialización de demostración siembra las cuentas anteriores y <code>colaborador@notix.test</code> / <code>Colab-demo-2026</code>. Son credenciales de demostración definidas en <code>database/database.go</code>; no son credenciales personales.</p>
+    <h3>Usar el token</h3>
+    <pre><code>curl -i http://localhost:8080/tableros/1/tareas \
+  -H 'Authorization: Bearer &lt;token&gt;'</code></pre>
+    <p class="muted">El ID de tablero del ejemplo es ilustrativo: el servidor imprime los IDs sembrados al iniciar; con un volumen existente pueden variar.</p>
+  </section>
+
+  <section aria-labelledby="routes">
+    <h2 id="routes">Rutas implementadas</h2>
+    <table>
+      <thead><tr><th>Método y ruta</th><th>Sesión</th><th>Uso y parámetros</th><th>Respuesta normal</th></tr></thead>
+      <tbody>
+        <tr><td class="method">GET /health</td><td>No</td><td>Comprobación de disponibilidad; no recibe parámetros.</td><td><code>200</code> <code>{"status":"ok"}</code></td></tr>
+        <tr><td class="method">POST /login</td><td>No</td><td>JSON requerido: <code>correo</code> y <code>clave</code>.</td><td><code>200</code> con <code>token</code>, <code>token_type</code>, <code>expires_at</code> y <code>usuario</code>.</td></tr>
+        <tr><td class="method">GET /tableros/{tableroID}/tareas</td><td>Bearer</td><td><code>tableroID</code>: entero positivo; usuario debe tener acceso al tablero.</td><td><code>200</code> con arreglo de tareas.</td></tr>
+        <tr><td class="method">GET /tareas/{id}</td><td>Bearer</td><td><code>id</code>: entero positivo; usuario debe tener acceso al tablero de la tarea.</td><td><code>200</code> con la tarea.</td></tr>
+        <tr><td class="method">POST /tareas</td><td>Bearer</td><td>JSON: <code>titulo</code> requerido (1–150 caracteres tras recortar espacios), <code>contenido</code> opcional (máximo 5000 caracteres), <code>columna_id</code> entero positivo. La columna debe pertenecer a un tablero accesible.</td><td><code>201</code> con tarea creada, inicialmente <code>pendiente</code>.</td></tr>
+        <tr><td class="method">PATCH /tareas/{id}/estado</td><td>Bearer</td><td><code>id</code>: entero positivo. JSON: <code>estado</code>. Solo el propietario puede cambiarlo.</td><td><code>200</code> con tarea actualizada.</td></tr>
+      </tbody>
+    </table>
+    <p>Estados permitidos: <code>pendiente</code>, <code>en_proceso</code> y <code>completado</code>. Transiciones aceptadas: pendiente → en_proceso; en_proceso → pendiente o completado; completado → en_proceso.</p>
+  </section>
+
+  <section aria-labelledby="examples">
+    <h2 id="examples">Cuerpos y respuestas de ejemplo</h2>
+    <h3>Crear tarea</h3>
+    <pre><code>POST /tareas
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+
+{
+  "titulo": "Preparar entrega",
+  "contenido": "Revisar los requisitos",
+  "columna_id": 1
+}</code></pre>
+    <h3>Cambiar estado</h3>
+    <pre><code>PATCH /tareas/1/estado
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+
+{"estado":"en_proceso"}</code></pre>
+    <h3>Forma de error</h3>
+    <pre><code>{
+  "error": {
+    "code": "forbidden",
+    "message": "No tienes permiso para realizar esta acción."
+  }
+}</code></pre>
+  </section>
+
+  <section aria-labelledby="responses">
+    <h2 id="responses">Errores y códigos HTTP</h2>
+    <table>
+      <thead><tr><th>Código</th><th>Cuándo lo devuelve la implementación</th></tr></thead>
+      <tbody>
+        <tr><td><code>400</code></td><td>JSON inválido, campos JSON desconocidos, más de un objeto JSON o ID que no es entero positivo.</td></tr>
+        <tr><td><code>401</code></td><td>Falta un Bearer válido en rutas protegidas o las credenciales de inicio de sesión no coinciden.</td></tr>
+        <tr><td><code>403</code></td><td>El usuario no tiene acceso al tablero o un colaborador intenta cambiar el estado.</td></tr>
+        <tr><td><code>404</code></td><td>No se encontró el recurso solicitado.</td></tr>
+        <tr><td><code>409</code></td><td>La tarea cambió concurrentemente y no se pudo aplicar la actualización condicional.</td></tr>
+        <tr><td><code>422</code></td><td>Validación de datos de tarea o transición de estado no permitida.</td></tr>
+        <tr><td><code>500</code></td><td>Error interno no clasificado; se registra en el servidor y se devuelve un mensaje genérico.</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">La ruta inexistente o el método no registrado se resuelve por el <code>ServeMux</code> estándar de Go; no hay un formato JSON de error propio para esos casos.</p>
+  </section>
+
+  <footer><p>Fuente de verificación: router, handlers, middleware, servicios, repositorios y modelos del repositorio Notix.</p></footer>
+</main>
+</body>
+</html>
