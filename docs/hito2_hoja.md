@@ -67,7 +67,8 @@ Criterios marcados como cumplidos solo cuando se verificaron en archivos del rep
 - [x] Existe una colección Bruno con los seis casos de esta hoja en `docs/hito2_bruno/`; los archivos declaran sus códigos esperados.
 - [ ] Resultado real de las seis peticiones Bruno: pendiente de ejecutar y registrar.
 - [x] Existe una prueba de integración de la API en `internal/httpapi/router_integration_test.go`, que cubre autenticación, permisos, creación/consulta y transiciones con PostgreSQL.
-- [ ] Ejecución exitosa de `go test ./...`: no comprobada en esta revisión. La prueba de integración puede omitirse si PostgreSQL no está disponible.
+- [x] Se ejecutó `go test ./...`: la captura compartida muestra salida `ok` para `notix/internal/httpapi` y `notix/internal/services`; los otros paquetes indican `[no test files]`.
+- [ ] Ejecución confirmada de la prueba de integración contra PostgreSQL: la captura no usa `-v`, por lo que no permite saber si la prueba se ejecutó o se omitió por falta de base de datos.
 - [x] El código separa modelos, handlers, servicios, repositorios y acceso HTTP; esta organización se explica en `docs/decisiones.md`.
 - [ ] Capturas de respaldo de cada paso: no localizadas entre los archivos revisados; pendientes de agregar/verificar.
 
