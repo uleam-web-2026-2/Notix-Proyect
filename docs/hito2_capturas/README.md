@@ -1,10 +1,5 @@
 # Capturas de respaldo
 
-Después de iniciar PostgreSQL y el servidor, guardar aquí una captura de cada
-respuesta de las peticiones 1 a 6 de `docs/hito2_bruno/`, más una de la salida
-verde de `go test ./...`. No se incluyen capturas ficticias: deben tomarse de
-una ejecución real antes de la demostración.
-
 Preparación de demo:
 <img width="981" height="756" alt="Captura de pantalla 2026-10-28 a la(s) 9 52 13 p  m" src="https://github.com/user-attachments/assets/88164fd8-802e-4e7a-aef1-f0ef4c3664a7" />
 Prueba 1:
