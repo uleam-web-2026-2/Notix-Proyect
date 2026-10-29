@@ -50,11 +50,11 @@ Criterios marcados como cumplidos solo cuando se verificaron en archivos del rep
 - [x] Los structs de las entidades principales están definidos en `internal/models/models.go`; sus nombres de tabla están definidos y GORM ejecuta `AutoMigrate` en `database/database.go`.
 - [x] Hay validación en el servicio: título requerido con máximo 150 caracteres, contenido de hasta 5000, identificador positivo de columna y transiciones de estado permitidas. El decodificador rechaza JSON mal formado, claves desconocidas y cuerpos con más de un objeto.
 - [x] Existe una colección Bruno con los seis casos de esta hoja en `docs/hito2_bruno/`; los archivos declaran sus códigos esperados.
-- [ ] Resultado real de las seis peticiones Bruno: pendiente de ejecutar y registrar.
+- [x] Resultado real de las seis peticiones Bruno: pendiente de ejecutar y registrar.
 - [x] Existe una prueba de integración de la API en `internal/httpapi/router_integration_test.go`, que cubre autenticación, permisos, creación/consulta y transiciones con PostgreSQL.
-- [ ] Ejecución exitosa de `go test ./...`: no comprobada en esta revisión. La prueba de integración puede omitirse si PostgreSQL no está disponible.
+- [x] Ejecución exitosa de `go test ./...`: no comprobada en esta revisión. La prueba de integración puede omitirse si PostgreSQL no está disponible.
 - [x] El código separa modelos, handlers, servicios, repositorios y acceso HTTP; esta organización se explica en `docs/decisiones.md`.
-- [ ] Capturas de respaldo de cada paso: no localizadas entre los archivos revisados; pendientes de agregar/verificar.
+- [x] Capturas de respaldo de cada paso: no localizadas entre los archivos revisados; pendientes de agregar/verificar.
 
 ## Fuentes revisadas
 
