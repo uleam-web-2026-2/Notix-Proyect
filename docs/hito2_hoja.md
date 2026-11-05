@@ -54,7 +54,7 @@ Criterios marcados como cumplidos solo cuando se verificaron en archivos del rep
 - [x] Existe una prueba de integración de la API en `internal/httpapi/router_integration_test.go`, que cubre autenticación, permisos, creación/consulta y transiciones con PostgreSQL.
 - [x] `RUN_DB_INTEGRATION=true go test ./...` terminó sin fallos con PostgreSQL disponible; la salida está guardada en `docs/taller10/go_test.txt`.
 - [x] El código separa modelos, handlers, servicios, repositorios y acceso HTTP; esta organización se explica en `docs/decisiones.md`.
-- [ ] Capturas de respaldo de cada paso: no se encontraron ni se generaron en esta ejecución; pendiente.
+- [ ] `docs/hito2_capturas/README.md` contiene capturas de preparación, las seis respuestas y `go test`, fechadas el 28 de octubre de 2026. Son evidencia histórica anterior a estas fases; falta una captura del `go test` ejecutado el 5 de noviembre de 2026.
 
 La comprobación manual `POST /tareas` con `id` y `estado` enviados desde el cliente (paso 2.1) permanece pendiente: no se ejecutó esa petición. No se presenta una respuesta prevista por inspección de código como resultado real.
 
