@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Notix API
   version: 1.0.0
-  description: API del Hito 2. Las operaciones marcadas (plan) se implementarán después del hito.
+  description: API de Notix. Las operaciones marcadas (plan) están descritas como trabajo futuro y no están implementadas.
   license:
     name: Notix student project
     identifier: LicenseRef-Notix-Project
@@ -24,6 +24,26 @@ tags:
 security:
   - bearerAuth: []
 paths:
+  /health:
+    get:
+      operationId: health
+      tags: [Autenticación]
+      summary: Comprobar disponibilidad de la API
+      security: []
+      responses:
+        "200":
+          description: API disponible.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: ok
+        "400":
+          description: El servidor HTTP no pudo interpretar la solicitud.
   /login:
     post:
       operationId: login
