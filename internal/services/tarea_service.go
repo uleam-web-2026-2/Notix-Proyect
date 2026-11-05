@@ -7,7 +7,6 @@ import (
 	"unicode/utf8"
 
 	"notix/internal/models"
-	"notix/internal/repository"
 )
 
 var (
@@ -17,11 +16,11 @@ var (
 )
 
 type TareaService struct {
-	tasks  *repository.TareaRepository
-	access *repository.AccessRepository
+	tasks  TareaRepository
+	access BoardAccessRepository
 }
 
-func NewTareaService(tasks *repository.TareaRepository, access *repository.AccessRepository) *TareaService {
+func NewTareaService(tasks TareaRepository, access BoardAccessRepository) *TareaService {
 	return &TareaService{tasks: tasks, access: access}
 }
 
