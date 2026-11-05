@@ -17,6 +17,7 @@ import (
 	"notix/config"
 	"notix/database"
 	"notix/internal/models"
+	"notix/internal/repository"
 )
 
 func TestTaskAPIIntegration(t *testing.T) {
@@ -58,7 +59,7 @@ func TestTaskAPIIntegration(t *testing.T) {
 	defer tx.Rollback()
 
 	owner, collaborator, board, column, tasks := createIntegrationFixture(t, tx)
-	handler := NewRouter(tx, cfg)
+	handler := NewRouter(tx, cfg, repository.NewTareaRepository(tx))
 
 	response := performRequest(handler, http.MethodGet, fmt.Sprintf("/tableros/%d/tareas", board.ID), nil, "")
 	if response.Code != http.StatusUnauthorized {

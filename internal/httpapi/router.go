@@ -12,8 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewRouter(db *gorm.DB, cfg config.Config) http.Handler {
-	tareaRepository := repository.NewTareaRepository(db)
+func NewRouter(db *gorm.DB, cfg config.Config, tareaRepository services.TareaRepository) http.Handler {
 	accessRepository := repository.NewAccessRepository(db)
 	accountRepository := repository.NewAccountRepository(db)
 	tareaService := services.NewTareaService(tareaRepository, accessRepository)

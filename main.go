@@ -13,6 +13,7 @@ import (
 	"notix/config"
 	"notix/database"
 	"notix/internal/httpapi"
+	"notix/internal/repository"
 )
 
 func main() {
@@ -36,10 +37,15 @@ func run() error {
 		return err
 	}
 	log.Printf("Demo IDs: board_id=%d owner_column_id=%d forbidden_task_id=%d", demo.BoardID, demo.OwnerColumnID, demo.ForbiddenTaskID)
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	tareaRepository := repository.NewTareaSqlcRepository(repository.NewTareaRepository(db), sqlDB)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewRouter(db, cfg),
+		Handler:           httpapi.NewRouter(db, cfg, tareaRepository),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
