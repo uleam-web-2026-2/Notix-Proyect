@@ -46,15 +46,15 @@ type Columna struct {
 func (Columna) TableName() string { return "columnas" }
 
 type Tarea struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Titulo    string    `gorm:"not null" json:"titulo"`
-	Contenido string    `json:"contenido"`
-	Estado    string    `gorm:"type:varchar(20);not null;default:'pendiente';check:chk_tarea_estado,estado IN ('pendiente','en_proceso','completado')" json:"estado"`
-	ColumnaID uint      `gorm:"not null;index" json:"columna_id"`
-	Columna   Columna   `gorm:"foreignKey:ColumnaID" json:"columna,omitempty"`
-	CreadorID uint      `gorm:"not null;index" json:"creador_id"`
-	Creador   Usuario   `gorm:"foreignKey:CreadorID" json:"creador,omitempty"`
-	Creado    time.Time `gorm:"autoCreateTime" json:"creado"`
+	ID        uint   `gorm:"primaryKey"`
+	Titulo    string `gorm:"not null"`
+	Contenido string
+	Estado    string    `gorm:"type:varchar(20);not null;default:'pendiente';check:chk_tarea_estado,estado IN ('pendiente','en_proceso','completado')"`
+	ColumnaID uint      `gorm:"not null;index"`
+	Columna   Columna   `gorm:"foreignKey:ColumnaID"`
+	CreadorID uint      `gorm:"not null;index"`
+	Creador   Usuario   `gorm:"foreignKey:CreadorID"`
+	Creado    time.Time `gorm:"autoCreateTime"`
 }
 
 func (Tarea) TableName() string { return "tareas" }

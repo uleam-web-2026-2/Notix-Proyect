@@ -32,7 +32,7 @@ func (h *TareaHandler) ListByBoard(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, tasks)
+	writeJSON(w, http.StatusOK, listaRespuesta(tasks))
 }
 
 func (h *TareaHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -50,15 +50,11 @@ func (h *TareaHandler) Get(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, task)
+	writeJSON(w, http.StatusOK, nuevaRespuesta(task))
 }
 
 func (h *TareaHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Titulo    string `json:"titulo"`
-		Contenido string `json:"contenido"`
-		ColumnaID uint   `json:"columna_id"`
-	}
+	var input CrearTareaRequest
 	if !decodeJSON(w, r, &input) {
 		return
 	}
@@ -67,12 +63,13 @@ func (h *TareaHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusUnauthorized, errorBody{Error: errorDetail{Code: "unauthorized", Message: "Se requiere iniciar sesión."}})
 		return
 	}
-	task, err := h.tasks.Create(principal.UserID, input.ColumnaID, input.Titulo, input.Contenido)
+	entity := input.aEntidad()
+	task, err := h.tasks.Create(principal.UserID, entity.ColumnaID, entity.Titulo, entity.Contenido)
 	if err != nil {
 		writeServiceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, task)
+	writeJSON(w, http.StatusCreated, nuevaRespuesta(task))
 }
 
 func (h *TareaHandler) ChangeState(w http.ResponseWriter, r *http.Request) {
@@ -80,9 +77,7 @@ func (h *TareaHandler) ChangeState(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var input struct {
-		Estado string `json:"estado"`
-	}
+	var input CambiarEstadoRequest
 	if !decodeJSON(w, r, &input) {
 		return
 	}
@@ -96,7 +91,7 @@ func (h *TareaHandler) ChangeState(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, task)
+	writeJSON(w, http.StatusOK, nuevaRespuesta(task))
 }
 
 func parseID(w http.ResponseWriter, raw, name string) (uint, bool) {

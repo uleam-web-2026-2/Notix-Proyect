@@ -14,3 +14,7 @@ Peticiones ejecutadas contra la API local antes de las fases del taller. Se ejec
 ## Resultado de la línea de base
 
 Los códigos observados fueron 401, 200, 200, 403, 200 y 422, respectivamente. Los IDs de demostración los imprimió el servidor al iniciar; no se fijaron IDs en esta hoja.
+
+## Prueba del paso 2.1: campos controlados por el servidor
+
+La petición de prueba con `id` y `estado` en `POST /tareas` queda pendiente de ejecutar. No se autorizó el envío de esa petición a la API local. La inspección del código anterior a los DTO muestra que `decodeJSON` rechazaba campos desconocidos, por lo que `400` era el resultado previsto por el código; no se registra como resultado observado.

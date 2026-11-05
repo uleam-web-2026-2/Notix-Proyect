@@ -82,7 +82,11 @@ func TestTaskAPIIntegration(t *testing.T) {
 	if response.Code != http.StatusCreated {
 		t.Fatalf("create task status = %d, want %d: %s", response.Code, http.StatusCreated, response.Body.String())
 	}
-	var created models.Tarea
+	var created struct {
+		ID        uint   `json:"id"`
+		Estado    string `json:"estado"`
+		CreadorID uint   `json:"creador_id"`
+	}
 	if err := json.Unmarshal(response.Body.Bytes(), &created); err != nil {
 		t.Fatalf("decode created task: %v", err)
 	}
