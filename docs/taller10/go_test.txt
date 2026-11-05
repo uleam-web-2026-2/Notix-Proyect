@@ -1,0 +1,10 @@
+?   	notix	[no test files]
+?   	notix/config	[no test files]
+?   	notix/database	[no test files]
+?   	notix/internal/handlers	[no test files]
+ok  	notix/internal/httpapi	(cached)
+?   	notix/internal/middleware	[no test files]
+?   	notix/internal/models	[no test files]
+?   	notix/internal/repository	[no test files]
+?   	notix/internal/repository/filas	[no test files]
+ok  	notix/internal/services	(cached)
