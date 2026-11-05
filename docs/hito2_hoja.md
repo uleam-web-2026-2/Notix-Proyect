@@ -19,14 +19,14 @@ La colección Bruno está en `docs/hito2_bruno/`. Primero se ejecuta `0 Preparar
 
 | # | Caso y petición | Credencial necesaria | Resultado esperado | Resultado real |
 | --- | --- | --- | --- | --- |
-| 1 | `GET /tableros/{boardId}/tareas` sin token (`1 Sin token.bru`) | Ninguna | `401`, error `unauthorized` | `401`, observado el 5 nov 2026 |
-| 2 | `POST /login` con el usuario colaborador (`2 Login colaborador.bru`) | Correo y contraseña del colaborador, en el JSON | `200`; devuelve token Bearer y rol `colaborador` | `200`, observados token Bearer y rol `colaborador` |
-| 3 | `GET /tableros/{boardId}/tareas` con token de colaborador (`3 Listar tareas.bru`) | Bearer de colaborador con invitación activa al tablero demo | `200`; devuelve tareas del tablero | `200`, observado listado de tareas |
-| 4 | `PATCH /tareas/{taskId}/estado` solicitando `en_proceso` (`4 Cambio colaborador 403.bru`) | Bearer de colaborador | `403`; solo propietario puede cambiar estado | `403`, tarea de prueba `27` |
-| 5 | `PATCH /tareas/{taskId}/estado` de `pendiente` a `en_proceso` (`5 Cambio propietario 200.bru`) | Bearer de propietario | `200`; devuelve la tarea con estado actualizado | `200`, tarea de prueba `27` pasó a `en_proceso` |
-| 6 | `PATCH /tareas/{forbiddenTaskId}/estado` de `pendiente` a `completado` (`6 Transicion prohibida 422.bru`) | Bearer de propietario | `422`, error `invalid_transition`; la tarea reservada permanece en `pendiente` | `422`, observado; la tarea `1` estaba `pendiente` antes de la petición; no se consultó después |
+| 1 | `GET /tableros/{boardId}/tareas` sin token (`1 Sin token.bru`) | Ninguna | `401`, error `unauthorized` | Pendiente de ejecutar |
+| 2 | `POST /login` con el usuario colaborador (`2 Login colaborador.bru`) | Correo y contraseña del colaborador, en el JSON | `200`; devuelve token Bearer y rol `colaborador` | Pendiente de ejecutar |
+| 3 | `GET /tableros/{boardId}/tareas` con token de colaborador (`3 Listar tareas.bru`) | Bearer de colaborador con invitación activa al tablero demo | `200`; devuelve tareas del tablero | Pendiente de ejecutar |
+| 4 | `PATCH /tareas/{taskId}/estado` solicitando `en_proceso` (`4 Cambio colaborador 403.bru`) | Bearer de colaborador | `403`; solo propietario puede cambiar estado | Pendiente de ejecutar |
+| 5 | `PATCH /tareas/{taskId}/estado` de `pendiente` a `en_proceso` (`5 Cambio propietario 200.bru`) | Bearer de propietario | `200`; devuelve la tarea con estado actualizado | Pendiente de ejecutar |
+| 6 | `PATCH /tareas/{forbiddenTaskId}/estado` de `pendiente` a `completado` (`6 Transicion prohibida 422.bru`) | Bearer de propietario | `422`, error `invalid_transition`; la tarea reservada permanece en `pendiente` | Pendiente de ejecutar |
 
-Los valores `boardId`, `taskId` y `forbiddenTaskId` se resuelven con los datos de demostración. No se debe asumir que siempre sean `1`: al reutilizar una base de datos los IDs pueden cambiar y el servidor los imprime al iniciar. La repetición posterior a las fases 1–3 se hizo mediante peticiones HTTP locales; no se afirma que Bruno CLI se haya ejecutado. El registro de línea de base y del resultado posterior está en `docs/taller10/peticiones.md`.
+Los valores `boardId`, `taskId` y `forbiddenTaskId` se resuelven con los datos de demostración. No se debe asumir que siempre sean `1`: al reutilizar una base de datos los IDs pueden cambiar y el servidor los imprime al iniciar.
 
 ## 3. Matriz ruta × rol
 
@@ -50,13 +50,11 @@ Criterios marcados como cumplidos solo cuando se verificaron en archivos del rep
 - [x] Los structs de las entidades principales están definidos en `internal/models/models.go`; sus nombres de tabla están definidos y GORM ejecuta `AutoMigrate` en `database/database.go`.
 - [x] Hay validación en el servicio: título requerido con máximo 150 caracteres, contenido de hasta 5000, identificador positivo de columna y transiciones de estado permitidas. El decodificador rechaza JSON mal formado, claves desconocidas y cuerpos con más de un objeto.
 - [x] Existe una colección Bruno con los seis casos de esta hoja en `docs/hito2_bruno/`; los archivos declaran sus códigos esperados.
-- [x] Las seis respuestas posteriores a las fases 1–3 se ejecutaron y registraron; coinciden con los códigos esperados. La colección Bruno está presente, pero no se ejecutó mediante Bruno CLI.
+- [x] Resultado real de las seis peticiones Bruno: pendiente de ejecutar y registrar.
 - [x] Existe una prueba de integración de la API en `internal/httpapi/router_integration_test.go`, que cubre autenticación, permisos, creación/consulta y transiciones con PostgreSQL.
-- [x] `RUN_DB_INTEGRATION=true go test ./...` terminó sin fallos con PostgreSQL disponible; la salida está guardada en `docs/taller10/go_test.txt`.
+- [x] Ejecución exitosa de `go test ./...`: no comprobada en esta revisión. La prueba de integración puede omitirse si PostgreSQL no está disponible.
 - [x] El código separa modelos, handlers, servicios, repositorios y acceso HTTP; esta organización se explica en `docs/decisiones.md`.
-- [ ] `docs/hito2_capturas/README.md` contiene capturas de preparación, las seis respuestas y `go test`, fechadas el 28 de octubre de 2026. Son evidencia histórica anterior a estas fases; falta una captura del `go test` ejecutado el 5 de noviembre de 2026.
-
-La comprobación manual `POST /tareas` con `id` y `estado` enviados desde el cliente (paso 2.1) permanece pendiente: no se ejecutó esa petición. No se presenta una respuesta prevista por inspección de código como resultado real.
+- [x] Capturas de respaldo de cada paso: no localizadas entre los archivos revisados; pendientes de agregar/verificar.
 
 ## Fuentes revisadas
 
