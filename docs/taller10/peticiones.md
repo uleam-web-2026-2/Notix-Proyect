@@ -30,4 +30,45 @@ El 5 de noviembre de 2026 se repitieron las seis peticiones contra la API local 
 
 ## Prueba del paso 2.1: campos controlados por el servidor
 
-La petición de prueba con `id` y `estado` en `POST /tareas` queda pendiente de ejecutar. No se autorizó el envío de esa petición a la API local. La inspección del código anterior a los DTO muestra que `decodeJSON` rechazaba campos desconocidos, por lo que `400` era el resultado previsto por el código; no se registra como resultado observado.
+El 5 de noviembre de 2026 se envió a la API local `POST /tareas` con `id` y `estado` incluidos en el cuerpo. La petición fue rechazada con `400` y el error observado fue `invalid_json` (`El cuerpo JSON no es válido.`). No se documenta aquí un resultado esperado como si fuera real.
+
+Se utilizó el token del colaborador y este cuerpo:
+
+```json
+{
+  "id": 999,
+  "estado": "completado",
+  "titulo": "Intento campos controlados por servidor",
+  "contenido": "Debe rechazarse antes de crear la tarea.",
+  "columna_id": 1
+}
+```
+
+```json
+{
+  "error": {
+    "code": "invalid_json",
+    "message": "El cuerpo JSON no es válido."
+  }
+}
+```
+
+## Verificación después de la transición prohibida
+
+Después de observar el `422` de la petición 6, se consultó `GET /tareas/1` con el token de propietaria. La respuesta observada fue `200` y el cuerpo conservó `"estado": "pendiente"`.
+
+## Ejecución de la colección Bruno CLI
+
+El 5 de noviembre de 2026 se ejecutó la colección local con Bruno CLI `4.3.0` mediante `npx --yes @usebruno/cli@4.3.0 run --env Local`, desde `docs/hito2_bruno`. El resultado fue **7 de 7 peticiones y 7 de 7 pruebas aprobadas**:
+
+| # | Petición de la colección | Código observado | Prueba |
+| --- | --- | --- | --- |
+| 0 | Preparar demo | `201` | Aprobada |
+| 1 | Sin token | `401` | Aprobada |
+| 2 | Login colaborador | `200` | Aprobada |
+| 3 | Listar tareas | `200` | Aprobada |
+| 4 | Cambio colaborador | `403` | Aprobada |
+| 5 | Cambio propietario | `200` | Aprobada |
+| 6 | Transición prohibida | `422` | Aprobada |
+
+Bruno actualizó temporalmente valores del entorno local durante la ejecución; `docs/hito2_bruno/environments/Local.bru` se restauró a su contenido original y no forma parte de los cambios.

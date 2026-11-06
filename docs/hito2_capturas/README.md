@@ -18,3 +18,9 @@ Prueba go test:
 
 <img width="607" height="201" alt="Captura de pantalla 2026-10-28 a la(s) 10 22 32 p  m" src="https://github.com/user-attachments/assets/653d3d5d-6cbd-4b2a-a5c5-47daf9c3bd46" />
 
+## Ejecución actual de las pruebas Go — 5 de noviembre de 2026
+
+Ejecución con `RUN_DB_INTEGRATION=true go test -count=1 ./...`:
+
+![Salida actual de las pruebas Go](go_test_2026-11-05.png)
+

@@ -2,9 +2,9 @@
 ?   	notix/config	[no test files]
 ?   	notix/database	[no test files]
 ?   	notix/internal/handlers	[no test files]
-ok  	notix/internal/httpapi	(cached)
+ok  	notix/internal/httpapi	0.755s
 ?   	notix/internal/middleware	[no test files]
 ?   	notix/internal/models	[no test files]
 ?   	notix/internal/repository	[no test files]
 ?   	notix/internal/repository/filas	[no test files]
-ok  	notix/internal/services	(cached)
+ok  	notix/internal/services	0.350s
