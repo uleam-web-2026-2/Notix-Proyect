@@ -1,0 +1,8 @@
+
+2026/11/10 16:24:54 connect to PostgreSQL at localhost:5434: failed to connect to `user=notix database=notix`:
+	127.0.0.1:5434 (localhost): dial error: dial tcp 127.0.0.1:5434: connect: connection refused
+	[::1]:5434 (localhost): dial error: dial tcp [::1]:5434: connect: connection refused
+2026/11/10 16:24:54 [35m/src/database/database.go:35
+[0m[31m[error] [0mfailed to initialize database, got error failed to connect to `user=notix database=notix`:
+	127.0.0.1:5434 (localhost): dial error: dial tcp 127.0.0.1:5434: connect: connection refused
+	[::1]:5434 (localhost): dial error: dial tcp [::1]:5434: connect: connection refused

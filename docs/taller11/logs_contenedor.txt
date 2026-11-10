@@ -1,0 +1,11 @@
+2026/11/10 16:47:21 Demo IDs: board_id=1 owner_column_id=1 forbidden_task_id=1
+2026/11/10 16:47:21 Notix API listening on http://localhost:8080
+2026/11/10 16:47:22 GET /health 200
+2026/11/10 16:47:32 POST /login 200
+2026/11/10 16:47:32 POST /login 200
+2026/11/10 16:47:32 POST /tareas 201
+2026/11/10 16:47:32 GET /tableros/1/tareas 401
+2026/11/10 16:47:32 GET /tableros/1/tareas 200
+2026/11/10 16:47:32 PATCH /tareas/43/estado 403
+2026/11/10 16:47:32 PATCH /tareas/43/estado 200
+2026/11/10 16:47:32 PATCH /tareas/1/estado 422

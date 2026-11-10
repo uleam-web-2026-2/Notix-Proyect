@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"log"
 	"net/http"
 
 	"notix/config"
@@ -32,5 +33,5 @@ func NewRouter(db *gorm.DB, cfg config.Config) http.Handler {
 	mux.Handle("GET /tareas/{id}", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.Get)))
 	mux.Handle("POST /tareas", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.Create)))
 	mux.Handle("PATCH /tareas/{id}/estado", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.ChangeState)))
-	return mux
+	return middleware.LogRequests(log.Default(), mux)
 }

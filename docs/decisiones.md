@@ -48,3 +48,25 @@ En autenticación, `POST /login` sigue el camino handler → servicio de autenti
 La separación permite cambiar el formato HTTP en handlers sin mezclar reglas de negocio, concentrar reglas de tareas/autorización en servicios y mantener las consultas de GORM en repositorios. Los structs compartidos describen el modelo persistente y las relaciones. La composición explícita del router deja visible el cableado de dependencias. La prueba de integración construye el router contra una transacción de PostgreSQL, mientras que los servicios se pueden revisar con menos dependencia del transporte HTTP.
 
 La contrapartida observada es el acoplamiento de varios servicios a repositorios concretos y la dependencia directa de GORM/modelos persistentes; por ello no se afirma que el dominio esté aislado como en arquitectura limpia. La presencia de una prueba de integración no implica que se haya ejecutado con éxito en este trabajo.
+
+## Semana 11 · el contenedor
+
+### D1 · Qué entra en la imagen
+
+La imagen final `notix:latest` ocupa 33,4 MB en disco (9,86 MB de contenido) e incluye el binario estático de 17,8 MB y los archivos mínimos de Distroless. Las herramientas de Go, las dependencias descargadas y el código fuente quedan en la etapa `compilacion`, que ocupa 1,62 GB en disco (386 MB de contenido). Sin `.dockerignore`, `.env` se enviaría en el contexto de construcción y quedaría en `/src` dentro de la etapa de compilación; no se copiaría a la imagen final, porque la etapa final solo copia `/servidor`. Excluirlo evita exponer el secreto en el contexto y en las capas/cache de compilación.
+
+### D2 · Dónde está la base, vista desde el contenedor
+
+Dentro de un contenedor, `localhost` apunta al propio contenedor, donde no corre PostgreSQL. La base del proyecto está publicada en el puerto `5434` de la máquina anfitriona; por eso el contenedor usa `host.docker.internal` como `DB_HOST` y conserva `DB_PORT=5434`. En un servidor, se configuraría el nombre DNS o dirección de la base accesible desde ese entorno, junto con sus credenciales y reglas de red; no se dependería de `host.docker.internal`.
+
+### D3 · Los puertos
+
+Se ejecutó `-p 8080:8080`: el primer `8080` es el puerto de la máquina al que se conecta Bruno y el segundo es el puerto dentro del contenedor. El segundo debe coincidir con `PORT=8080`, donde escucha la API. Si no coincide, Docker dirige el tráfico a un puerto sin servidor y la API no será accesible por ese mapeo.
+
+### D4 · La hora
+
+Las fechas de la respuesta 3 conservan el mismo instante: por ejemplo, `2026-10-24T11:54:47.280102-05:00` con `go run` y `2026-10-24T16:54:47.280102Z` en el contenedor. Distroless entrega UTC y la API serializa el instante con su zona/offset, por lo que cambió la representación, no la hora real. Se mantiene la fecha en UTC en el contenedor y los clientes deben interpretar el offset para mostrarla en su zona local.
+
+### Registro de peticiones HTTP
+
+El middleware de logging escribe en la salida estándar el método, la ruta y el código HTTP de cada petición, de modo que `docker logs` permite verificar las respuestas atendidas por el contenedor. No registra parámetros de consulta ni tokens.
