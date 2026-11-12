@@ -2,15 +2,20 @@
 
 | Petición | Con go run | En el contenedor | Con Compose |
 | --- | --- | --- | --- |
-| 1 sin token | 401 | 401 | |
-| 2 login | 200 | 200 | |
-| 3 con token | 200 | 200 | |
-| 4 rol sin permiso | 403 | 403 | |
-| 5 cambio permitido | 200 | 200 | |
-| 6 transición prohibida | 422 | 422 | |
+| 1 sin token | 401 | 401 | 401 |
+| 2 login | 200 | 200 | 200 |
+| 3 con token | 200 | 200 | 200 |
+| 4 rol sin permiso | 403 | 403 | 403 |
+| 5 cambio permitido | 200 | 200 | 200 |
+| 6 transición prohibida | 422 | 422 | 422 |
 
 Los códigos de respuesta coinciden entre `go run` y el contenedor; no hubo
 cambios de código HTTP que justificar.
+
+El 12 de noviembre de 2026 se ejecutó la colección Bruno CLI 4.3.0 contra la API
+levantada por Compose. Las seis peticiones del hito y la preparación de datos
+respondieron como se esperaba: 7 de 7 peticiones y 7 de 7 pruebas aprobadas.
+Los códigos de las seis peticiones fueron `401`, `200`, `200`, `403`, `200` y `422`.
 
 Petición 3 con go run (respuesta completa):
 

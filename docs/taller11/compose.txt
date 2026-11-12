@@ -1,0 +1,14 @@
+NAME                        IMAGE                COMMAND                  SERVICE    CREATED         STATUS                   PORTS
+notix-taller11-api-1        notix-taller11-api   "/servidor"              api        3 minutes ago   Up 3 minutes             0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+notix-taller11-postgres-1   postgres:17-alpine   "docker-entrypoint.s…"   postgres   3 minutes ago   Up 3 minutes (healthy)   5432/tcp
+api-1  | 2026/11/12 05:48:30 Demo IDs: board_id=1 owner_column_id=1 forbidden_task_id=1
+api-1  | 2026/11/12 05:48:30 Notix API listening on http://localhost:8080
+api-1  | 2026/11/12 05:51:43 POST /login 200
+api-1  | 2026/11/12 05:51:43 POST /login 200
+api-1  | 2026/11/12 05:51:43 POST /tareas 201
+api-1  | 2026/11/12 05:51:44 GET /tableros/1/tareas 401
+api-1  | 2026/11/12 05:51:44 POST /login 200
+api-1  | 2026/11/12 05:51:44 GET /tableros/1/tareas 200
+api-1  | 2026/11/12 05:51:44 PATCH /tareas/3/estado 403
+api-1  | 2026/11/12 05:51:44 PATCH /tareas/3/estado 200
+api-1  | 2026/11/12 05:51:44 PATCH /tareas/1/estado 422

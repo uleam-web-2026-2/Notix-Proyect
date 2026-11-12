@@ -70,3 +70,25 @@ Las fechas de la respuesta 3 conservan el mismo instante: por ejemplo, `2026-10-
 ### Registro de peticiones HTTP
 
 El middleware de logging escribe en la salida estándar el método, la ruta y el código HTTP de cada petición, de modo que `docker logs` permite verificar las respuestas atendidas por el contenedor. No registra parámetros de consulta ni tokens.
+
+## Semana 11 · reto: la API y la base, juntas
+
+### D5 · Cómo encuentra la API a la base
+
+Compose pone ambos servicios en su red privada. La API usa `DB_HOST=postgres`, que es el nombre del servicio de la base, y `DB_PORT=5432`, el puerto interno de PostgreSQL. No usa `host.docker.internal` ni el puerto `5434`, que pertenece al acceso desde la máquina anfitriona configurado en `docker-compose.yml` para desarrollo.
+
+### D6 · El orden de arranque
+
+El servicio `postgres` tiene un `healthcheck` con `pg_isready`; `api` depende de que la base esté `service_healthy`. Así, Compose espera a que PostgreSQL acepte conexiones antes de iniciar la API y ejecutar sus migraciones y semillas. El 12 de noviembre de 2026 se probó desde volumen vacío tres veces seguidas con `docker compose down -v` y `docker compose up -d --build`; en las tres, PostgreSQL pasó a `healthy` y la API arrancó sin cambios al código Go.
+
+### D7 · Dónde quedan los datos
+
+El servicio PostgreSQL monta el volumen nombrado `notix-compose-data` en `/var/lib/postgresql/data`. `docker compose down` elimina contenedores y red, pero conserva ese volumen; `docker compose down -v` también lo elimina. Se comprobó el 12 de noviembre: la tabla `tareas` tenía 2 registros antes de `down`, y conservó los mismos 2 después de `up -d --build` sin `-v`.
+
+### D8 · Los secretos
+
+`compose.yaml` no contiene claves ni contraseñas literales. Compose exige que `DB_PASSWORD` y `JWT_SECRET` estén definidas en el entorno; se pueden proporcionar desde el `.env` local o desde la terminal, y Compose las pasa a los servicios mediante interpolación. `.env` está ignorado por Git; `.env.example` solo contiene los nombres de las variables, no sus valores. Para las pruebas de esta fase se usaron los valores de desarrollo que ya define el proyecto, pasados al proceso Compose sin crear un archivo `.env`.
+
+### D9 · Lo que se publica en la máquina
+
+Solo se publica el puerto de la API: `${PORT:-8080}` en la máquina hacia el mismo puerto en el contenedor. PostgreSQL no publica ningún puerto del host, por lo que no choca con el contenedor de la semana 3 en `5434`. Para consultar la base de Compose se puede usar `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`.
