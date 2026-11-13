@@ -26,6 +26,8 @@ nombres de las variables, sin valores; si se necesita otra configuración, copie
 esa plantilla a `.env` y complete allí los valores localmente. `DB_PORT` cambia
 el puerto publicado por Docker y el puerto al que Go se conecta. Si `5434`
 también está ocupado, elija otro puerto libre y cambie `DB_PORT` en `.env`.
+`DB_PASSWORD` y `JWT_SECRET` son obligatorios; `JWT_SECRET` debe tener al menos
+32 caracteres.
 
 Al arrancar, la aplicación conecta a PostgreSQL, crea/actualiza las tablas con
 GORM y agrega los datos de demostración de forma idempotente. Si la conexión o

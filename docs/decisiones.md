@@ -9,7 +9,7 @@ El backend usa **capas clásicas** con separación por responsabilidad, organiza
 | Ruta | Responsabilidad observada |
 | --- | --- |
 | `main.go` | Punto de entrada: carga configuración, conecta y migra/siembra la base de datos, registra los IDs de demostración y levanta el servidor HTTP. |
-| `config/` | Carga variables de entorno, aplica valores por defecto y valida puerto, TTL del token y secreto JWT. |
+| `config/` | Carga variables de entorno, aplica valores por defecto a la configuración no secreta y valida credenciales, puerto, TTL y secreto JWT. |
 | `database/` | Conexión PostgreSQL con GORM, migración de modelos y creación idempotente de cuentas/datos demo. |
 | `internal/models/` | Structs persistentes, relaciones GORM, nombres de tabla y constantes de roles, invitaciones y estados. |
 | `internal/repository/` | Consultas y escrituras de persistencia: tareas, cuentas y autorización/acceso a tablero. Traduce ausencia/conflicto en errores de dominio del repositorio. |
@@ -37,7 +37,7 @@ En autenticación, `POST /login` sigue el camino handler → servicio de autenti
 
 ## Decisiones respaldadas por el código
 
-- **Autenticación:** JWT firmado HS256; claims de usuario, rol, emisor, sujeto y vencimiento. El TTL por defecto es 8 horas y puede configurarse. Las contraseñas demo se generan y comparan con bcrypt. En desarrollo se permite un secreto por defecto; fuera de desarrollo se requiere `JWT_SECRET` de al menos 32 caracteres.
+- **Autenticación:** JWT firmado HS256; claims de usuario, rol, emisor, sujeto y vencimiento. El TTL por defecto es 8 horas y puede configurarse. Las contraseñas demo se generan y comparan con bcrypt. `JWT_SECRET` debe definirse mediante el entorno y tener al menos 32 caracteres en todos los entornos.
 - **Autorización:** la pertenencia al tablero se comprueba en servicios/repositorios para consultar o crear tareas. Solo el rol `propietario` puede cambiar el estado; un colaborador recibe `403`.
 - **Validación:** los handlers exigen JSON válido, rechazan claves desconocidas y limitan el cuerpo a 64 KiB. Los servicios validan título, longitud del contenido, columna y transiciones. El modelo de tarea incluye una restricción de estados permitidos en base de datos.
 - **Persistencia:** PostgreSQL a través de GORM, migración automática y relaciones/índices declarados en structs. La actualización de estado condiciona la escritura al estado anterior para detectar conflictos concurrentes.
@@ -87,7 +87,7 @@ El servicio PostgreSQL monta el volumen nombrado `notix-compose-data` en `/var/l
 
 ### D8 · Los secretos
 
-`compose.yaml` no contiene claves ni contraseñas literales. Compose exige que `DB_PASSWORD` y `JWT_SECRET` estén definidas en el entorno; se pueden proporcionar desde el `.env` local o desde la terminal, y Compose las pasa a los servicios mediante interpolación. `.env` está ignorado por Git; `.env.example` solo contiene los nombres de las variables, no sus valores. Para las pruebas de esta fase se usaron los valores de desarrollo que ya define el proyecto, pasados al proceso Compose sin crear un archivo `.env`.
+`compose.yaml` no contiene claves ni contraseñas literales. Tanto Compose como la aplicación exigen que `DB_PASSWORD` y `JWT_SECRET` estén definidas en el entorno; se pueden proporcionar desde el `.env` local o desde la terminal, y Compose las pasa a los servicios mediante interpolación. `JWT_SECRET` debe tener al menos 32 caracteres. `.env` está ignorado por Git; `.env.example` solo contiene los nombres de las variables, no sus valores. Para las pruebas de esta fase se usaron valores de desarrollo proporcionados al proceso Compose, sin crear un archivo `.env`.
 
 ### D9 · Lo que se publica en la máquina
 

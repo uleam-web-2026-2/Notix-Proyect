@@ -32,12 +32,14 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("TOKEN_TTL must be a positive Go duration")
 	}
 
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" && envOrDefault("APP_ENV", "development") == "development" {
-		secret = "notix-development-only-secret-not-for-production"
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		return Config{}, fmt.Errorf("DB_PASSWORD must be set")
 	}
+
+	secret := os.Getenv("JWT_SECRET")
 	if len(secret) < 32 {
-		return Config{}, fmt.Errorf("JWT_SECRET must contain at least 32 characters; set it before running outside development")
+		return Config{}, fmt.Errorf("JWT_SECRET must contain at least 32 characters")
 	}
 
 	port := envOrDefault("PORT", "8080")
@@ -51,7 +53,7 @@ func Load() (Config, error) {
 		DBHost:      envOrDefault("DB_HOST", "localhost"),
 		DBPort:      envOrDefault("DB_PORT", "5434"),
 		DBUser:      envOrDefault("DB_USER", "notix"),
-		DBPassword:  envOrDefault("DB_PASSWORD", "notix_dev_password"),
+		DBPassword:  dbPassword,
 		DBName:      envOrDefault("DB_NAME", "notix"),
 		DBSSLMode:   envOrDefault("DB_SSLMODE", "disable"),
 		JWTSecret:   []byte(secret),
