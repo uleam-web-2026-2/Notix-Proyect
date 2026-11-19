@@ -1,0 +1,7 @@
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Vary: Origin
+Date: Thu, 19 Nov 2026 22:06:17 GMT
+Content-Length: 388
+
+{"id":48,"titulo":"Evidencia CORS fase 2","contenido":"Registro creado para la prueba real de CORS.","estado":"en_proceso","columna_id":1,"columna":{"id":1,"nombre":"Por hacer","orden":1,"tablero_id":1},"creador_id":1,"creador":{"id":1,"nombre":"Propietaria Demo","correo":"propietaria@notix.test","creado":"2026-10-24T11:54:47.169774-05:00"},"creado":"2026-11-19T17:05:57.698651-05:00"}

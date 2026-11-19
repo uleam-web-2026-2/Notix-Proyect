@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/cors"
+
 	"notix/config"
 	"notix/database"
 	"notix/internal/httpapi"
@@ -37,9 +39,16 @@ func run() error {
 	}
 	log.Printf("Demo IDs: board_id=%d owner_column_id=%d forbidden_task_id=%d", demo.BoardID, demo.OwnerColumnID, demo.ForbiddenTaskID)
 
+	handler := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowedMethods: []string{"GET", "POST", "PATCH"},
+		AllowedHeaders: []string{"Authorization", "Content-Type"},
+		MaxAge:         300,
+	}).Handler(httpapi.NewRouter(db, cfg))
+
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewRouter(db, cfg),
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
