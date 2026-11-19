@@ -1,0 +1,22 @@
+database/database.go:30:	query := dsn.Query()
+database/database.go:83:		if err := tx.Where("creador_id = ? AND titulo = ?", owner.ID, board.Titulo).FirstOrCreate(&board).Error; err != nil {
+database/database.go:91:			if err := tx.Where("tablero_id = ? AND orden = ?", board.ID, i+1).FirstOrCreate(&column).Error; err != nil {
+database/database.go:104:		if err := tx.Where("tablero_id = ? AND usuario_id = ?", board.ID, collaborator.ID).Assign(
+database/database.go:117:		if err := tx.Where("columna_id = ? AND titulo = ?", columns[0].ID, forbiddenTask.Titulo).FirstOrCreate(&forbiddenTask).Error; err != nil {
+database/database.go:132:	if err := tx.Where("correo = ?", email).FirstOrCreate(&user).Error; err != nil {
+database/database.go:142:	if err := tx.Where("correo = ?", email).FirstOrCreate(&account).Error; err != nil {
+internal/handlers/tarea_handler.go:48:	task, err := h.tasks.Find(principal.UserID, taskID)
+internal/handlers/tarea_handler.go:105:		writeJSON(w, http.StatusBadRequest, errorBody{Error: errorDetail{Code: "invalid_id", Message: name + " debe ser un entero positivo."}})
+internal/repository/access_repository.go:22:	if err := r.db.First(&board, boardID).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+internal/repository/access_repository.go:32:	err := r.db.Where("tablero_id = ? AND usuario_id = ? AND estado_invitacion = ?", boardID, userID, models.InvitacionActiva).
+internal/repository/access_repository.go:33:		First(&share).Error
+internal/repository/account_repository.go:22:	err := r.db.Preload("Usuario").Where("correo = ?", email).First(&account).Error
+internal/repository/tarea_repository.go:24:		Where("columnas.tablero_id = ?", boardID).
+internal/repository/tarea_repository.go:27:		Order("columnas.orden ASC, tareas.creado ASC, tareas.id ASC").
+internal/repository/tarea_repository.go:28:		Find(&tasks).Error
+internal/repository/tarea_repository.go:40:	err := r.db.Preload("Columna").Preload("Creador").First(&task, id).Error
+internal/repository/tarea_repository.go:59:		Where("id = ? AND estado = ?", id, from).
+internal/repository/tarea_repository.go:69:	if err := r.db.Model(&models.Tarea{}).Select("count(*) > 0").Where("id = ?", id).Scan(&exists).Error; err != nil {
+internal/repository/tarea_repository.go:80:	err := r.db.Preload("Tablero").First(&column, id).Error
+internal/services/tarea_service.go:39:func (s *TareaService) Find(userID, taskID uint) (models.Tarea, error) {
+main.go:41:		Addr:              ":" + cfg.Port,
