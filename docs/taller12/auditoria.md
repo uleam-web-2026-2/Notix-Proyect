@@ -15,7 +15,8 @@ Salida completa: `auditoria.txt` (22 coincidencias).
 | `internal/handlers/tarea_handler.go:48` `h.tasks.Find(...)` | No. Es una llamada al servicio. | El ID llegó por la ruta, pero `parseID` ya lo convirtió a `uint`. | No aplica. | Nada. |
 | `internal/handlers/tarea_handler.go:105` `name + ...` | No. Solo arma el mensaje de error. | No. `name` es una etiqueta fija del handler. | No aplica. | Nada. |
 | `internal/repository/access_repository.go:22` `First(&board, boardID)` | Sí. | El ID de tablero puede venir de la ruta y ya fue convertido a `uint`. | Sí. GORM recibe el ID como valor. | Nada: el ID se valida antes. |
-| `internal/repository/access_repository.go:32-33` `Where(...).First(&share)` | Sí. | Indirectamente, los IDs validados y el usuario del token. | Sí, los tres valores usan `?`. | Nada: ya usa parámetros. |
+| `internal/repository/access_repository.go:32` `Where("tablero_id = ? AND usuario_id = ? AND estado_invitacion = ?", ...)` | Sí. | Indirectamente, los IDs validados y el usuario del token. | Sí, los tres valores usan `?`. | Nada: ya usa parámetros. |
+| `internal/repository/access_repository.go:33` `First(&share)` | Sí. Ejecuta la consulta construida antes. | No agrega texto del cliente. | Los valores anteriores ya van como parámetros. | Nada. |
 | `internal/repository/account_repository.go:22` `Where("correo = ?", email).First(&account)` | Sí. | Sí, el correo llega desde el cuerpo de `POST /login`. | Sí, con `?`. | Nada: ya usa parámetros. |
 | `internal/repository/tarea_repository.go:24` `Where("columnas.tablero_id = ?", boardID)` | Sí. | El ID de tablero puede venir de la ruta y ya fue convertido a `uint`. | Sí, con `?`. | Nada: ya usa parámetros. |
 | `internal/repository/tarea_repository.go:27` `Order("columnas.orden ASC, tareas.creado ASC, tareas.id ASC")` | Sí. | No. El orden es texto fijo del servidor. | No aplica. | Nada: no recibe un campo de orden del cliente. |
