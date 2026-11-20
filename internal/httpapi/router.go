@@ -3,6 +3,10 @@ package httpapi
 import (
 	"log"
 	"net/http"
+	"time"
+
+	chimid "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 
 	"notix/config"
 	"notix/internal/handlers"
@@ -28,10 +32,13 @@ func NewRouter(db *gorm.DB, cfg config.Config) http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	mux.HandleFunc("POST /login", authHandler.Login)
+	login := httprate.LimitBy(5, time.Minute, func(r *http.Request) (string, error) {
+		return httprate.CanonicalizeIP(chimid.GetClientIP(r.Context())), nil
+	})(http.HandlerFunc(authHandler.Login))
+	mux.Handle("POST /login", login)
 	mux.Handle("GET /tableros/{tableroID}/tareas", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.ListByBoard)))
 	mux.Handle("GET /tareas/{id}", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.Get)))
 	mux.Handle("POST /tareas", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.Create)))
 	mux.Handle("PATCH /tareas/{id}/estado", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.ChangeState)))
-	return middleware.LogRequests(log.Default(), mux)
+	return middleware.LogRequests(log.Default(), chimid.ClientIPFromRemoteAddr(mux))
 }

@@ -1,0 +1,12 @@
+Salida real del log del proceso de la API para preparación y peticiones 1 a 6.
+Instancia: rama taller12 en http://localhost:8081, 2026-11-19.
+
+2026/11/19 22:36:32 POST /login 200
+2026/11/19 22:36:32 POST /login 200
+2026/11/19 22:36:32 POST /tareas 201
+2026/11/19 22:36:32 GET /tableros/1/tareas 401
+2026/11/19 22:36:32 POST /login 200
+2026/11/19 22:36:32 GET /tableros/1/tareas 200
+2026/11/19 22:36:32 PATCH /tareas/44/estado 403
+2026/11/19 22:36:32 PATCH /tareas/44/estado 200
+2026/11/19 22:36:32 PATCH /tareas/1/estado 422

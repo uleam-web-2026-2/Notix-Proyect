@@ -92,3 +92,45 @@ El servicio PostgreSQL monta el volumen nombrado `notix-compose-data` en `/var/l
 ### D9 · Lo que se publica en la máquina
 
 Solo se publica el puerto de la API: `${PORT:-8080}` en la máquina hacia el mismo puerto en el contenedor. PostgreSQL no publica ningún puerto del host, por lo que no choca con el contenedor de la semana 3 en `5434`. Para consultar la base de Compose se puede usar `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`.
+
+## Semana 12 · CORS, inyección y límite de login
+
+### D1 · SQL e intento de inyección
+
+La búsqueda revisó 22 coincidencias y clasificó 16 operaciones que construyen
+o ejecutan SQL. Los valores variables llegan a GORM mediante `?` o como
+identificadores numéricos ya validados; la auditoría no encontró una consulta
+que concatenara texto del cliente. La respuesta guardada en
+`docs/taller12/inyeccion.txt` fue `400 invalid_id`. Por ello no se cambió una
+consulta: el código ya separaba los valores del SQL.
+
+### D2 · Origen CORS
+
+La API permite `http://localhost:5173`, junto con GET, POST y PATCH y los
+encabezados Authorization y Content-Type. No usa `*` porque solo se configuró
+el origen conocido del frontend durante este taller. `main.go` envuelve el
+router con el handler CORS; las solicitudes OPTIONS no permitidas se contestan
+sin `Access-Control-Allow-Origin`. La evidencia `cors_no_permitido.txt`
+muestra que el servidor puede responder HTTP 200 a una petición previa, pero
+sin ese encabezado el navegador no entrega la respuesta al origen. En un
+despliegue habría que configurar el origen real del frontend.
+
+### D3 · Límite de intentos
+
+`POST /login` admite cinco intentos por IP en una ventana de un minuto. El
+sexto intento fue el primero en recibir `429 Too Many Requests`, con
+`Retry-After: 60`; el séptimo también recibió 429. Las cinco primeras
+respuestas fueron 401, con `X-RateLimit-Remaining` de 4 a 0. La evidencia
+completa está en `docs/taller12/rafaga.txt`. El límite se instala solo en
+`POST /login`, porque protege la comprobación de credenciales sin restringir
+las demás operaciones autenticadas.
+
+### D4 · IP usada por el limitador
+
+El middleware `ClientIPFromRemoteAddr` de chi lee la dirección de la conexión
+TCP y la coloca en el contexto; `httprate` la normaliza con
+`CanonicalizeIP` para identificar el contador por cliente. No se usa
+`X-Forwarded-For`, que podría ser enviado o alterado por el cliente. Si la API
+se publica detrás de un proxy, `RemoteAddr` identifica al proxy; el despliegue
+deberá configurar una resolución de IP que confíe únicamente en los proxies
+conocidos antes de esperar límites independientes por cliente.
