@@ -1,0 +1,14 @@
+Salida real de `docker compose logs --no-color --since 5m api` después de
+preparar la tarea de demostración y ejecutar las peticiones Hito 2 1 a 6.
+Proyecto Compose temporal `notix-s12`, 19 de noviembre de 2026 (UTC en logs).
+
+api-1  | 2026/11/20 03:48:01 Notix API listening on http://localhost:8082
+api-1  | 2026/11/20 03:48:49 POST /login 200
+api-1  | 2026/11/20 03:48:49 POST /login 200
+api-1  | 2026/11/20 03:48:49 POST /tareas 201
+api-1  | 2026/11/20 03:48:49 GET /tableros/1/tareas 401
+api-1  | 2026/11/20 03:48:49 POST /login 200
+api-1  | 2026/11/20 03:48:49 GET /tableros/1/tareas 200
+api-1  | 2026/11/20 03:48:49 PATCH /tareas/2/estado 403
+api-1  | 2026/11/20 03:48:49 PATCH /tareas/2/estado 200
+api-1  | 2026/11/20 03:48:49 PATCH /tareas/1/estado 422

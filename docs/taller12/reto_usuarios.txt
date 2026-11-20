@@ -1,0 +1,10 @@
+Salida real de `psql -U notix_admin -d notix -c '\du'` desde el contenedor
+PostgreSQL del proyecto temporal notix-s12, después de iniciar desde volumen
+vacío:
+
+                                List of roles
+   Role name    |                         Attributes
+----------------+------------------------------------------------------------
+ notix_admin    | Superuser, Create role, Create DB, Replication, Bypass RLS
+ notix_api      |
+ notix_migrator |

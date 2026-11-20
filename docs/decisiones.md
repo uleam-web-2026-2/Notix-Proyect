@@ -8,7 +8,7 @@ El backend usa **capas clásicas** con separación por responsabilidad, organiza
 
 | Ruta | Responsabilidad observada |
 | --- | --- |
-| `main.go` | Punto de entrada: carga configuración, conecta y migra/siembra la base de datos, registra los IDs de demostración y levanta el servidor HTTP. |
+| `main.go` | Punto de entrada: carga configuración; con el argumento `migrate` conecta, migra/siembra y asigna permisos, y en el modo normal conecta como usuario de la API y levanta el servidor HTTP. |
 | `config/` | Carga variables de entorno, aplica valores por defecto a la configuración no secreta y valida credenciales, puerto, TTL y secreto JWT. |
 | `database/` | Conexión PostgreSQL con GORM, migración de modelos y creación idempotente de cuentas/datos demo. |
 | `internal/models/` | Structs persistentes, relaciones GORM, nombres de tabla y constantes de roles, invitaciones y estados. |
@@ -20,13 +20,15 @@ El backend usa **capas clásicas** con separación por responsabilidad, organiza
 | `docs/` | OpenAPI, colección Bruno de demostración y documentación del proyecto/hitos. `docs/openapi.yaml` incluye explícitamente operaciones planeadas además de las disponibles. |
 | `go.mod` | Módulo y dependencias Go: JWT, godotenv, bcrypt vía `x/crypto`, GORM y driver PostgreSQL. |
 | `docker-compose.yml` | Servicio local de PostgreSQL para desarrollo, según el README. |
+| `compose.yaml` | Stack de entrega local: PostgreSQL, inicialización de roles, migración de una sola ejecución y API con credenciales separadas. |
+| `docker/postgres/01-roles.sh` | Script de inicialización de PostgreSQL que crea el usuario de migración y el usuario limitado de la API, y asigna la propiedad del esquema. |
 | `.env.example` / `.env` | Plantilla de nombres de configuración y valores locales (el archivo `.env` se indica como ignorado por Git). |
 
 La estructura de carpetas se describe a partir de los archivos consultados; no se atribuyen a la API handlers para comentarios, tableros o columnas porque no están conectados al router.
 
 ## Flujo de una petición
 
-1. `main.go` carga configuración y prepara PostgreSQL. GORM migra `Usuario`, `Tablero`, `Columna`, `Tarea`, `TableroCompartido`, `Comentario` y `Cuenta`.
+1. El servicio `migrate` ejecuta `main.go migrate` con el usuario de migración; GORM migra `Usuario`, `Tablero`, `Columna`, `Tarea`, `TableroCompartido`, `Comentario` y `Cuenta`, y crea los datos demo. El servicio API inicia después con el usuario de ejecución.
 2. `internal/httpapi/router.go` crea repositorios, servicios y handlers, y registra las rutas.
 3. En rutas protegidas, `middleware.RequireAuth` lee `Authorization: Bearer ...`, valida JWT y adjunta el identificador/rol al contexto. Sin token válido responde `401`.
 4. El handler valida/decodifica datos HTTP y llama al servicio correspondiente.
@@ -134,3 +136,40 @@ TCP y la coloca en el contexto; `httprate` la normaliza con
 se publica detrás de un proxy, `RemoteAddr` identifica al proxy; el despliegue
 deberá configurar una resolución de IP que confíe únicamente en los proxies
 conocidos antes de esperar límites independientes por cliente.
+
+## Semana 12 · reto de mínimo privilegio
+
+### D5 · Usuario y permisos de la API
+
+Compose crea roles separados: `notix_admin` administra el clúster, el usuario
+de migración es dueño del esquema y de las tablas, y `notix_api` ejecuta el
+servidor. A `notix_api` se le concede `USAGE` en `public`, `SELECT` en
+`cuentas`, `usuarios`, `tableros`, `tableros_compartidos`, `columnas` y
+`tareas`, además de `INSERT` y `UPDATE` solo en `tareas` y `USAGE, SELECT` en
+`tareas_id_seq`. No tiene permiso de crear objetos ni es dueño de las tablas.
+Los seis estados de la columna «Con el usuario de la API (reto)» se
+conservaron; el resultado real de intentar `DROP TABLE tareas` fue
+`must be owner of table tareas`, registrado en `docs/taller12/reto_drop.txt`.
+
+### D6 · Quién crea y modifica las tablas
+
+La imagen de PostgreSQL ejecuta `docker/postgres/01-roles.sh` en el primer
+arranque de un volumen para crear los roles y separar la propiedad del
+esquema. Luego el servicio de una sola ejecución `migrate` conecta con el
+usuario de migración, corre `AutoMigrate`, aplica la siembra demo y otorga los
+permisos específicos de la API. El contenedor de la API espera a que esa tarea
+termine; durante sus reinicios solo conecta con `notix_api` y no intenta
+migrar. `docker compose down -v` y `docker compose up -d --build` se probaron
+desde cero el 19 de noviembre de 2026. Los secretos se pasaron al entorno de
+Compose; no se añadieron contraseñas al repositorio.
+
+### D7 · Alcance de una inyección bajo este rol
+
+La auditoría no halló una consulta vulnerable: el correo, los identificadores
+y el estado se envían a GORM como parámetros o valores tipados. Por tanto, las
+pruebas guardadas no lograron convertir esos datos en SQL ejecutable. Además,
+el usuario de la API no es dueño de los objetos y no puede ejecutar DDL como
+`DROP TABLE`; su alcance de escritura queda limitado a insertar y actualizar
+tareas. El usuario de administración conserva la capacidad de administrar
+roles y objetos y se usa solo para inicializar PostgreSQL.
+`docs/taller12/reto_usuarios.txt` registra los roles observados con `\du`.

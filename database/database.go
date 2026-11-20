@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"regexp"
 
 	"notix/config"
 	"notix/internal/models"
@@ -65,6 +66,34 @@ func MigrateAndSeed(db *gorm.DB) (DemoData, error) {
 		return DemoData{}, fmt.Errorf("seed demo data: %w", err)
 	}
 	return demo, nil
+}
+
+var validRoleName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// GrantAPIPrivileges gives the runtime role only the reads and task writes
+// used by the repositories. Migrations and demo seeding run as another role.
+func GrantAPIPrivileges(db *gorm.DB, apiUser string) error {
+	if !validRoleName.MatchString(apiUser) {
+		return fmt.Errorf("invalid API database role name %q", apiUser)
+	}
+	role := `"` + apiUser + `"`
+	statements := []string{
+		`REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC`,
+		`REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC`,
+		`REVOKE ALL ON ALL TABLES IN SCHEMA public FROM ` + role,
+		`REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM ` + role,
+		`REVOKE CREATE ON SCHEMA public FROM ` + role,
+		`GRANT USAGE ON SCHEMA public TO ` + role,
+		`GRANT SELECT ON TABLE cuentas, usuarios, tableros, tableros_compartidos, columnas, tareas TO ` + role,
+		`GRANT INSERT, UPDATE ON TABLE tareas TO ` + role,
+		`GRANT USAGE, SELECT ON SEQUENCE tareas_id_seq TO ` + role,
+	}
+	for _, statement := range statements {
+		if err := db.Exec(statement).Error; err != nil {
+			return fmt.Errorf("grant API database privileges: %w", err)
+		}
+	}
+	return nil
 }
 
 func SeedDemoData(db *gorm.DB) (DemoData, error) {

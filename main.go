@@ -29,15 +29,28 @@ func run() error {
 		return err
 	}
 
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		db, err := database.Connect(cfg)
+		if err != nil {
+			return err
+		}
+		demo, err := database.MigrateAndSeed(db)
+		if err != nil {
+			return err
+		}
+		if apiUser := os.Getenv("API_DB_USER"); apiUser != "" {
+			if err := database.GrantAPIPrivileges(db, apiUser); err != nil {
+				return err
+			}
+		}
+		log.Printf("Demo IDs: board_id=%d owner_column_id=%d forbidden_task_id=%d", demo.BoardID, demo.OwnerColumnID, demo.ForbiddenTaskID)
+		return nil
+	}
+
 	db, err := database.Connect(cfg)
 	if err != nil {
 		return err
 	}
-	demo, err := database.MigrateAndSeed(db)
-	if err != nil {
-		return err
-	}
-	log.Printf("Demo IDs: board_id=%d owner_column_id=%d forbidden_task_id=%d", demo.BoardID, demo.OwnerColumnID, demo.ForbiddenTaskID)
 
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},

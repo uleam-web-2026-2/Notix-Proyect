@@ -1,0 +1,16 @@
+Intento DROP seguro: comandos ejecutados con el usuario notix_api en una
+transacción, dentro del contenedor PostgreSQL del proyecto temporal notix-s12:
+
+BEGIN
+DROP TABLE tareas
+ROLLBACK
+
+Salida real de psql:
+
+BEGIN
+ROLLBACK
+ERROR:  must be owner of table tareas
+
+La cuenta no es dueña de `tareas`, por lo que PostgreSQL rechazó DROP. Se
+comprobó después con el mismo usuario que `current_user` era `notix_api` y que
+`to_regclass('public.tareas')` devolvía `tareas`; la tabla sigue existiendo.

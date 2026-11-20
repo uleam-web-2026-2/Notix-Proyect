@@ -4,10 +4,15 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-notix}
-      POSTGRES_USER: ${DB_USER:-notix}
+      POSTGRES_USER: ${DB_USER:-notix_admin}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en el archivo .env}
+      API_DB_USER: ${API_DB_USER:-notix_api}
+      API_DB_PASSWORD: ${API_DB_PASSWORD:?Define API_DB_PASSWORD en el archivo .env}
+      MIGRATION_DB_USER: ${MIGRATION_DB_USER:-notix_migrator}
+      MIGRATION_DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?Define MIGRATION_DB_PASSWORD en el archivo .env}
     volumes:
       - notix-compose-data:/var/lib/postgresql/data
+      - ./docker/postgres/01-roles.sh:/docker-entrypoint-initdb.d/01-roles.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 3s
@@ -20,21 +25,42 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       PORT: ${PORT:-8080}
       APP_ENV: ${APP_ENV:-development}
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_USER: ${DB_USER:-notix}
-      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en el archivo .env}
+      DB_USER: ${API_DB_USER:-notix_api}
+      DB_PASSWORD: ${API_DB_PASSWORD:?Define API_DB_PASSWORD en el archivo .env}
       DB_NAME: ${DB_NAME:-notix}
       DB_SSLMODE: ${DB_SSLMODE:-disable}
       JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en el archivo .env}
       TOKEN_TTL: ${TOKEN_TTL:-8h}
     ports:
       - "${PORT:-8080}:${PORT:-8080}"
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["migrate"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${MIGRATION_DB_USER:-notix_migrator}
+      DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?Define MIGRATION_DB_PASSWORD en el archivo .env}
+      DB_NAME: ${DB_NAME:-notix}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en el archivo .env}
+      TOKEN_TTL: ${TOKEN_TTL:-8h}
+      API_DB_USER: ${API_DB_USER:-notix_api}
 
 volumes:
   notix-compose-data:
