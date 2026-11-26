@@ -8,9 +8,12 @@ import (
 	"notix/internal/middleware"
 	"notix/internal/repository"
 	"notix/internal/services"
+	"notix/internal/transporte"
 
 	"gorm.io/gorm"
 )
+
+const frontendOrigin = "http://localhost:5173"
 
 func NewRouter(db *gorm.DB, cfg config.Config) http.Handler {
 	tareaRepository := repository.NewTareaRepository(db)
@@ -18,6 +21,8 @@ func NewRouter(db *gorm.DB, cfg config.Config) http.Handler {
 	accountRepository := repository.NewAccountRepository(db)
 	tareaService := services.NewTareaService(tareaRepository, accessRepository)
 	authService := services.NewAuthService(accountRepository, cfg.JWTSecret, cfg.TokenExpiry)
+	avisos := transporte.NuevosAvisos(authService, frontendOrigin)
+	tareaService.AvisarCon(avisos)
 	tareaHandler := handlers.NewTareaHandler(tareaService)
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -28,6 +33,7 @@ func NewRouter(db *gorm.DB, cfg config.Config) http.Handler {
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 	mux.HandleFunc("POST /login", authHandler.Login)
+	mux.HandleFunc("GET /ws", avisos.Conectar)
 	mux.Handle("GET /tableros/{tableroID}/tareas", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.ListByBoard)))
 	mux.Handle("GET /tareas/{id}", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.Get)))
 	mux.Handle("POST /tareas", middleware.RequireAuth(authService, http.HandlerFunc(tareaHandler.Create)))

@@ -1,0 +1,8 @@
+=== RUN   TestWebSocketSinTokenResponde401
+--- PASS: TestWebSocketSinTokenResponde401 (0.00s)
+=== RUN   TestWebSocketOrigenNoPermitidoResponde403
+--- PASS: TestWebSocketOrigenNoPermitidoResponde403 (0.00s)
+=== RUN   TestWebSocketAvisoSoloLlegaAlCreador
+--- PASS: TestWebSocketAvisoSoloLlegaAlCreador (0.50s)
+PASS
+ok  	notix/internal/transporte	0.733s
