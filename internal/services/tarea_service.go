@@ -7,7 +7,6 @@ import (
 	"unicode/utf8"
 
 	"notix/internal/models"
-	"notix/internal/repository"
 )
 
 var (
@@ -17,12 +16,40 @@ var (
 )
 
 type TareaService struct {
-	tasks  *repository.TareaRepository
-	access *repository.AccessRepository
+	tasks  TareaStore
+	access AccessStore
+	avisos Avisador
 }
 
-func NewTareaService(tasks *repository.TareaRepository, access *repository.AccessRepository) *TareaService {
+type TareaStore interface {
+	ListByBoard(boardID uint) ([]models.Tarea, error)
+	FindByID(taskID uint) (models.Tarea, error)
+	FindColumn(columnID uint) (models.Columna, error)
+	Create(task *models.Tarea) error
+	UpdateState(taskID uint, from, to string) error
+}
+
+type AccessStore interface {
+	IsUserOnBoard(userID, boardID uint) (bool, error)
+	RoleForBoard(userID, boardID uint) (string, error)
+}
+
+type Aviso struct {
+	Tipo   string `json:"tipo"`
+	ID     uint   `json:"id"`
+	Estado string `json:"estado"`
+}
+
+type Avisador interface {
+	Enviar(quien string, aviso Aviso)
+}
+
+func NewTareaService(tasks TareaStore, access AccessStore) *TareaService {
 	return &TareaService{tasks: tasks, access: access}
+}
+
+func (s *TareaService) AvisarCon(avisos Avisador) {
+	s.avisos = avisos
 }
 
 func (s *TareaService) ListByBoard(userID, boardID uint) ([]models.Tarea, error) {
@@ -105,6 +132,9 @@ func (s *TareaService) ChangeState(userID, taskID uint, target string) (models.T
 	}
 	if err := s.tasks.UpdateState(task.ID, task.Estado, target); err != nil {
 		return models.Tarea{}, err
+	}
+	if s.avisos != nil {
+		s.avisos.Enviar(fmt.Sprint(task.CreadorID), Aviso{Tipo: "estado_cambiado", ID: task.ID, Estado: target})
 	}
 	return s.tasks.FindByID(task.ID)
 }

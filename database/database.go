@@ -78,6 +78,18 @@ func SeedDemoData(db *gorm.DB) (DemoData, error) {
 		if err != nil {
 			return err
 		}
+		secondCollaboratorPassword := "colab2-notix"
+		secondCollaborator, err := seedUserAndAccount(tx, "Segundo Colaborador Demo", "colaborador2@notix.test", secondCollaboratorPassword, models.RolColaborador)
+		if err != nil {
+			return err
+		}
+		secondCollaboratorHash, err := bcrypt.GenerateFromPassword([]byte(secondCollaboratorPassword), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("hash demo password for %s: %w", secondCollaborator.Correo, err)
+		}
+		if err := tx.Model(&models.Cuenta{}).Where("correo = ?", secondCollaborator.Correo).Update("clave_hash", string(secondCollaboratorHash)).Error; err != nil {
+			return fmt.Errorf("update demo password for %s: %w", secondCollaborator.Correo, err)
+		}
 
 		board := models.Tablero{Titulo: "Notix - tablero de demostración", CreadorID: owner.ID}
 		if err := tx.Where("creador_id = ? AND titulo = ?", owner.ID, board.Titulo).FirstOrCreate(&board).Error; err != nil {
@@ -95,16 +107,18 @@ func SeedDemoData(db *gorm.DB) (DemoData, error) {
 		}
 		demo.OwnerColumnID = columns[0].ID
 
-		share := models.TableroCompartido{
-			TableroID:        board.ID,
-			UsuarioID:        collaborator.ID,
-			RolEnTablero:     models.RolColaborador,
-			EstadoInvitacion: models.InvitacionActiva,
-		}
-		if err := tx.Where("tablero_id = ? AND usuario_id = ?", board.ID, collaborator.ID).Assign(
-			models.TableroCompartido{RolEnTablero: models.RolColaborador, EstadoInvitacion: models.InvitacionActiva},
-		).FirstOrCreate(&share).Error; err != nil {
-			return fmt.Errorf("share demo board with collaborator: %w", err)
+		for _, member := range []models.Usuario{collaborator, secondCollaborator} {
+			share := models.TableroCompartido{
+				TableroID:        board.ID,
+				UsuarioID:        member.ID,
+				RolEnTablero:     models.RolColaborador,
+				EstadoInvitacion: models.InvitacionActiva,
+			}
+			if err := tx.Where("tablero_id = ? AND usuario_id = ?", board.ID, member.ID).Assign(
+				models.TableroCompartido{RolEnTablero: models.RolColaborador, EstadoInvitacion: models.InvitacionActiva},
+			).FirstOrCreate(&share).Error; err != nil {
+				return fmt.Errorf("share demo board with collaborator %d: %w", member.ID, err)
+			}
 		}
 
 		forbiddenTask := models.Tarea{

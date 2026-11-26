@@ -1,0 +1,6 @@
+=== RUN   TestCambioEstadoAvisaAlCreadorDespuesDeGuardar
+--- PASS: TestCambioEstadoAvisaAlCreadorDespuesDeGuardar (0.00s)
+=== RUN   TestTransicionProhibidaNoAvisa
+--- PASS: TestTransicionProhibidaNoAvisa (0.00s)
+PASS
+ok  	notix/internal/services	0.266s
