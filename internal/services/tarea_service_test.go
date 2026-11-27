@@ -33,14 +33,26 @@ func TestValidTransition(t *testing.T) {
 }
 
 type fakeTareaStore struct {
-	task    models.Tarea
-	updated bool
+	task      models.Tarea
+	created   bool
+	updated   bool
+	createErr error
 }
 
 func (f *fakeTareaStore) ListByBoard(uint) ([]models.Tarea, error) { return nil, nil }
 func (f *fakeTareaStore) FindByID(uint) (models.Tarea, error)      { return f.task, nil }
 func (f *fakeTareaStore) FindColumn(uint) (models.Columna, error)  { return models.Columna{}, nil }
-func (f *fakeTareaStore) Create(*models.Tarea) error               { return nil }
+func (f *fakeTareaStore) Create(task *models.Tarea) error {
+	if f.createErr != nil {
+		return f.createErr
+	}
+	if task.ID == 0 {
+		task.ID = 42
+	}
+	f.task = *task
+	f.created = true
+	return nil
+}
 func (f *fakeTareaStore) UpdateState(_ uint, _, to string) error {
 	f.task.Estado = to
 	f.updated = true
@@ -55,10 +67,13 @@ func (fakeAccessStore) RoleForBoard(uint, uint) (string, error) {
 }
 
 type fakeAvisador struct {
-	who    string
-	aviso  Aviso
-	called bool
-	store  *fakeTareaStore
+	who       string
+	aviso     Aviso
+	called    bool
+	store     *fakeTareaStore
+	creatorID uint
+	taskID    uint
+	created   bool
 }
 
 func (f *fakeAvisador) Enviar(who string, aviso Aviso) {
@@ -67,6 +82,45 @@ func (f *fakeAvisador) Enviar(who string, aviso Aviso) {
 	f.aviso = aviso
 	if !f.store.updated {
 		panic("notification was sent before the state was saved")
+	}
+}
+
+func (f *fakeAvisador) AvisarCreacion(creatorID, taskID uint) {
+	f.created = true
+	f.creatorID = creatorID
+	f.taskID = taskID
+	if !f.store.created {
+		panic("creation notification was sent before the task was saved")
+	}
+}
+
+func TestCrearTareaAvisaDespuesDeGuardar(t *testing.T) {
+	store := &fakeTareaStore{}
+	avisador := &fakeAvisador{store: store}
+	service := NewTareaService(store, fakeAccessStore{})
+	service.AvisarCon(avisador)
+
+	task, err := service.Create(7, 2, "Nueva tarea", "Contenido")
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if !avisador.created || avisador.creatorID != 7 || avisador.taskID != task.ID {
+		t.Fatalf("unexpected creation notification: created=%t creatorID=%d taskID=%d task.ID=%d",
+			avisador.created, avisador.creatorID, avisador.taskID, task.ID)
+	}
+}
+
+func TestCrearTareaFallidaNoAvisa(t *testing.T) {
+	store := &fakeTareaStore{createErr: errors.New("write failed")}
+	avisador := &fakeAvisador{store: store}
+	service := NewTareaService(store, fakeAccessStore{})
+	service.AvisarCon(avisador)
+
+	if _, err := service.Create(7, 2, "Nueva tarea", "Contenido"); err == nil {
+		t.Fatal("Create() succeeded after the store failed")
+	}
+	if avisador.created {
+		t.Fatal("failed task creation sent a notification")
 	}
 }
 

@@ -1,0 +1,6 @@
+=== RUN   TestRetoAvisaATodosLosPropietariosConectados
+--- PASS: TestRetoAvisaATodosLosPropietariosConectados (0.51s)
+=== RUN   TestRetoExcluyeAlPropietarioCreador
+--- PASS: TestRetoExcluyeAlPropietarioCreador (1.01s)
+PASS
+ok  	notix/internal/transporte	5.564s

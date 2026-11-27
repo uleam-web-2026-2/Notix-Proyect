@@ -37,11 +37,12 @@ type AccessStore interface {
 type Aviso struct {
 	Tipo   string `json:"tipo"`
 	ID     uint   `json:"id"`
-	Estado string `json:"estado"`
+	Estado string `json:"estado,omitempty"`
 }
 
 type Avisador interface {
 	Enviar(quien string, aviso Aviso)
+	AvisarCreacion(creadorID, registroID uint)
 }
 
 func NewTareaService(tasks TareaStore, access AccessStore) *TareaService {
@@ -112,7 +113,14 @@ func (s *TareaService) Create(userID, columnID uint, title, content string) (mod
 	if err := s.tasks.Create(&task); err != nil {
 		return models.Tarea{}, err
 	}
-	return s.tasks.FindByID(task.ID)
+	created, err := s.tasks.FindByID(task.ID)
+	if err != nil {
+		return models.Tarea{}, err
+	}
+	if s.avisos != nil {
+		s.avisos.AvisarCreacion(userID, created.ID)
+	}
+	return created, nil
 }
 
 func (s *TareaService) ChangeState(userID, taskID uint, target string) (models.Tarea, error) {

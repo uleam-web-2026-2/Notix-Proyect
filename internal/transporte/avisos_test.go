@@ -2,6 +2,7 @@ package transporte
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"notix/internal/models"
 	"notix/internal/services"
 )
 
@@ -81,11 +83,78 @@ func TestWebSocketAvisoSoloLlegaAlCreador(t *testing.T) {
 	}
 }
 
+func TestRetoAvisaATodosLosPropietariosConectados(t *testing.T) {
+	server, avisos := newTestServer(t)
+	creador := dialTestClient(t, server.URL, "ana")
+	defer creador.Close(websocket.StatusNormalClosure, "")
+	propietario1 := dialTestClient(t, server.URL, "luis")
+	defer propietario1.Close(websocket.StatusNormalClosure, "")
+	propietario2 := dialTestClient(t, server.URL, "marta")
+	defer propietario2.Close(websocket.StatusNormalClosure, "")
+
+	waitForClients(t, avisos, "1", "3", "4")
+	avisos.AvisarCreacion(1, 23)
+
+	want := services.Aviso{Tipo: "tarea_nueva", ID: 23}
+	assertReceivesAviso(t, propietario1, want)
+	assertReceivesAviso(t, propietario2, want)
+	assertReceivesNoAviso(t, creador)
+}
+
+func TestRetoExcluyeAlPropietarioCreador(t *testing.T) {
+	server, avisos := newTestServer(t)
+	creador := dialTestClient(t, server.URL, "propietario-creador")
+	defer creador.Close(websocket.StatusNormalClosure, "")
+	propietario := dialTestClient(t, server.URL, "luis")
+	defer propietario.Close(websocket.StatusNormalClosure, "")
+	colaborador := dialTestClient(t, server.URL, "ana")
+	defer colaborador.Close(websocket.StatusNormalClosure, "")
+
+	waitForClients(t, avisos, "1", "3", "5")
+	avisos.AvisarCreacion(5, 24)
+
+	assertReceivesAviso(t, propietario, services.Aviso{Tipo: "tarea_nueva", ID: 24})
+	assertReceivesNoAviso(t, creador)
+	assertReceivesNoAviso(t, colaborador)
+}
+
+func assertReceivesAviso(t *testing.T, conn *websocket.Conn, want services.Aviso) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	messageType, contents, err := conn.Read(ctx)
+	if err != nil {
+		t.Fatalf("client did not receive notification: %v", err)
+	}
+	if messageType != websocket.MessageText {
+		t.Fatalf("message type = %v, want text", messageType)
+	}
+	var got services.Aviso
+	if err := json.Unmarshal(contents, &got); err != nil {
+		t.Fatalf("unmarshal notification: %v", err)
+	}
+	if got != want {
+		t.Fatalf("notification = %+v, want %+v", got, want)
+	}
+}
+
+func assertReceivesNoAviso(t *testing.T, conn *websocket.Conn) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	if _, _, err := conn.Read(ctx); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("client read error = %v, want no notification before timeout", err)
+	}
+}
+
 func newTestServer(t *testing.T) (*httptest.Server, *Avisos) {
 	t.Helper()
 	avisos := NuevosAvisos(authenticadorDePrueba{tokens: map[string]services.TokenClaims{
-		"ana": {UserID: 1},
-		"eva": {UserID: 2},
+		"ana":                 {UserID: 1, Role: models.RolColaborador},
+		"eva":                 {UserID: 2, Role: models.RolColaborador},
+		"luis":                {UserID: 3, Role: models.RolPropietario},
+		"marta":               {UserID: 4, Role: models.RolPropietario},
+		"propietario-creador": {UserID: 5, Role: models.RolPropietario},
 	}}, "http://localhost:5173")
 	server := httptest.NewServer(http.HandlerFunc(avisos.Conectar))
 	t.Cleanup(server.Close)

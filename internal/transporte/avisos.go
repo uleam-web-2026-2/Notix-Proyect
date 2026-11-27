@@ -10,6 +10,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"notix/internal/models"
 	"notix/internal/services"
 )
 
@@ -18,33 +19,60 @@ type Autenticador interface {
 }
 
 type Avisos struct {
-	autenticador Autenticador
-	origen       string
-	mu           sync.Mutex
-	canales      map[string]map[*canalCliente]struct{}
+	autenticador  Autenticador
+	origen        string
+	mu            sync.Mutex
+	canales       map[string]map[*canalCliente]struct{}
+	canalesPorRol map[string]map[*canalCliente]struct{}
 }
 
 type canalCliente struct {
 	conn   *websocket.Conn
+	userID uint
 	avisos chan services.Aviso
 }
 
 func NuevosAvisos(autenticador Autenticador, origen string) *Avisos {
 	return &Avisos{
-		autenticador: autenticador,
-		origen:       origen,
-		canales:      make(map[string]map[*canalCliente]struct{}),
+		autenticador:  autenticador,
+		origen:        origen,
+		canales:       make(map[string]map[*canalCliente]struct{}),
+		canalesPorRol: make(map[string]map[*canalCliente]struct{}),
 	}
 }
 
 func (a *Avisos) Enviar(quien string, aviso services.Aviso) {
+	a.enviar(a.clientesPorUsuario(quien), aviso)
+}
+
+func (a *Avisos) AvisarCreacion(creadorID, registroID uint) {
+	clientes := a.clientesPorRol(models.RolPropietario, creadorID)
+	a.enviar(clientes, services.Aviso{Tipo: "tarea_nueva", ID: registroID})
+}
+
+func (a *Avisos) clientesPorUsuario(quien string) []*canalCliente {
 	a.mu.Lock()
+	defer a.mu.Unlock()
 	clientes := make([]*canalCliente, 0, len(a.canales[quien]))
 	for cliente := range a.canales[quien] {
 		clientes = append(clientes, cliente)
 	}
-	a.mu.Unlock()
+	return clientes
+}
 
+func (a *Avisos) clientesPorRol(rol string, excluirID uint) []*canalCliente {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	clientes := make([]*canalCliente, 0, len(a.canalesPorRol[rol]))
+	for cliente := range a.canalesPorRol[rol] {
+		if cliente.userID != excluirID {
+			clientes = append(clientes, cliente)
+		}
+	}
+	return clientes
+}
+
+func (a *Avisos) enviar(clientes []*canalCliente, aviso services.Aviso) {
 	for _, cliente := range clientes {
 		select {
 		case cliente.avisos <- aviso:
@@ -68,12 +96,12 @@ func (a *Avisos) Conectar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	quien := strconv.FormatUint(uint64(claims.UserID), 10)
-	cliente := &canalCliente{conn: conn, avisos: make(chan services.Aviso, 16)}
+	cliente := &canalCliente{conn: conn, userID: claims.UserID, avisos: make(chan services.Aviso, 16)}
 	readContext := conn.CloseRead(context.Background())
-	a.agregar(quien, cliente)
+	a.agregar(quien, claims.Role, cliente)
 	go a.escribir(readContext, cliente)
 	defer func() {
-		a.quitar(quien, cliente)
+		a.quitar(quien, claims.Role, cliente)
 		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}()
 	<-readContext.Done()
@@ -100,21 +128,29 @@ func (a *Avisos) escribir(ctx context.Context, cliente *canalCliente) {
 	}
 }
 
-func (a *Avisos) agregar(quien string, cliente *canalCliente) {
+func (a *Avisos) agregar(quien, rol string, cliente *canalCliente) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.canales[quien] == nil {
 		a.canales[quien] = make(map[*canalCliente]struct{})
 	}
 	a.canales[quien][cliente] = struct{}{}
+	if a.canalesPorRol[rol] == nil {
+		a.canalesPorRol[rol] = make(map[*canalCliente]struct{})
+	}
+	a.canalesPorRol[rol][cliente] = struct{}{}
 }
 
-func (a *Avisos) quitar(quien string, cliente *canalCliente) {
+func (a *Avisos) quitar(quien, rol string, cliente *canalCliente) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	delete(a.canales[quien], cliente)
 	if len(a.canales[quien]) == 0 {
 		delete(a.canales, quien)
+	}
+	delete(a.canalesPorRol[rol], cliente)
+	if len(a.canalesPorRol[rol]) == 0 {
+		delete(a.canalesPorRol, rol)
 	}
 }
 

@@ -66,3 +66,11 @@ Cada cliente tiene un búfer de 16 avisos. Si está lento y el canal está lleno
 `GET /ws` está registrado sin `RequireAuth` en `internal/httpapi/router.go` porque el WebSocket del navegador no permite establecer el encabezado `Authorization` como lo hace una petición HTTP normal. Por eso `Avisos.Conectar`, en `internal/transporte/avisos.go`, lee el token de la query y lo valida con `AuthService.Authenticate` antes de llamar a `websocket.Accept`; un token ausente o inválido recibe `401` antes del cambio de protocolo. `OriginPatterns` permite únicamente `http://localhost:5173`: el origen limita qué página puede abrir la conexión desde un navegador, pero no sustituye la autenticación del usuario.
 
 El token de la query queda visible en la línea de acceso del servidor porque `middleware.LogRequests` registra `r.URL.RequestURI()`. La evidencia se copia a `docs/taller13/logs_avisos.txt` y, antes de guardarla, el comando indicado por el paquete reemplaza el valor por `token=BORRADO`. La expiración JWT se valida al conectar; el código no vuelve a autenticar una conexión ya aceptada, así que el vencimiento del token no la cierra por sí solo. La conexión termina cuando se cierra el WebSocket o falla su lectura/escritura.
+
+## Semana 13 · reto: lo nuevo, al negocio
+
+### D4 · Cómo sabe a quién avisar
+
+`Avisos.Conectar` valida el JWT y obtiene el rol de `TokenClaims.Role`. Al registrar la conexión, conserva ese rol en un índice adicional por rol, además del índice por usuario que ya se usa para los avisos de cambio de estado. `TareaService.Create` notifica la creación después de guardar y solo pasa el ID del creador y el de la `Tarea`; no conoce WebSocket ni decide qué rol debe recibir el evento. `Avisos.AvisarCreacion` decide el destino: envía `tarea_nueva` con el ID a las conexiones del rol `propietario` y excluye al creador. El aviso `estado_cambiado` sigue dirigiéndose únicamente al canal asociado a `Tarea.CreadorID`.
+
+El rol se toma de los claims al conectar. Si el rol de una cuenta cambia mientras su WebSocket sigue abierto, el índice conserva el rol del token usado en esa conexión hasta que se desconecte; el nuevo rol se aplica al volver a autenticar y conectar. Esta decisión mantiene la difusión fuera del servicio, aunque no revoca de inmediato una conexión abierta si cambia el rol.
