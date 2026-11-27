@@ -48,3 +48,21 @@ En autenticación, `POST /login` sigue el camino handler → servicio de autenti
 La separación permite cambiar el formato HTTP en handlers sin mezclar reglas de negocio, concentrar reglas de tareas/autorización en servicios y mantener las consultas de GORM en repositorios. Los structs compartidos describen el modelo persistente y las relaciones. La composición explícita del router deja visible el cableado de dependencias. La prueba de integración construye el router contra una transacción de PostgreSQL, mientras que los servicios se pueden revisar con menos dependencia del transporte HTTP.
 
 La contrapartida observada es el acoplamiento de varios servicios a repositorios concretos y la dependencia directa de GORM/modelos persistentes; por ello no se afirma que el dominio esté aislado como en arquitectura limpia. La presencia de una prueba de integración no implica que se haya ejecutado con éxito en este trabajo.
+
+## Semana 13 · los avisos en tiempo real
+
+### D1 · Por qué WebSocket y no SSE ni sondeo
+
+Notix avisa al creador de una `Tarea` cuando cambia su estado. El mensaje viaja del servidor al navegador e incluye `tipo`, `id` y `estado`; el navegador no envía mensajes de aplicación por el WebSocket. El sondeo podría detectar el cambio después de su siguiente intervalo, con una demora máxima aproximada de ese intervalo, y generaría peticiones aunque no haya cambios. SSE bastaría para este flujo de un solo sentido: el navegador recibe eventos y las modificaciones siguen usando HTTP. Se usa WebSocket porque el punto 3 del taller lo exige, no porque el flujo actual necesite comunicación bidireccional. Su costo es mantener conexiones abiertas y gestionar su ciclo de vida, concurrencia, búferes y autorización por origen y token.
+
+### D2 · Quién recibe cada aviso
+
+La llave de `Avisos.canales` en `internal/transporte/avisos.go` es el ID del usuario convertido a texto decimal. `Conectar` la obtiene de `claims.UserID` y la convierte con `strconv.FormatUint`. El dueño del registro es `Tarea.CreadorID`, asignado en `TareaService.Create` desde el `userID` autenticado que recibe `TareaHandler.Create`. Después de guardar el cambio de estado, `TareaService.ChangeState` llama a `Enviar(fmt.Sprint(task.CreadorID), aviso)`. Ambas rutas producen la misma representación del ID, por lo que el aviso se busca en el canal del creador y no se difunde a todos los colaboradores.
+
+Cada cliente tiene un búfer de 16 avisos. Si está lento y el canal está lleno, `Enviar` no espera y descarta ese aviso por el `default`; así una conexión lenta no bloquea el cambio guardado. Si hubiera dos copias de la API, cada proceso tendría su propio mapa en memoria: una instancia no encontraría los WebSockets conectados a la otra. Haría falta distribuir los avisos mediante un componente compartido, por ejemplo un publicador/suscriptor; actualmente no existe esa distribución.
+
+### D3 · El token en la dirección
+
+`GET /ws` está registrado sin `RequireAuth` en `internal/httpapi/router.go` porque el WebSocket del navegador no permite establecer el encabezado `Authorization` como lo hace una petición HTTP normal. Por eso `Avisos.Conectar`, en `internal/transporte/avisos.go`, lee el token de la query y lo valida con `AuthService.Authenticate` antes de llamar a `websocket.Accept`; un token ausente o inválido recibe `401` antes del cambio de protocolo. `OriginPatterns` permite únicamente `http://localhost:5173`: el origen limita qué página puede abrir la conexión desde un navegador, pero no sustituye la autenticación del usuario.
+
+El token de la query queda visible en la línea de acceso del servidor porque `middleware.LogRequests` registra `r.URL.RequestURI()`. La evidencia se copia a `docs/taller13/logs_avisos.txt` y, antes de guardarla, el comando indicado por el paquete reemplaza el valor por `token=BORRADO`. La expiración JWT se valida al conectar; el código no vuelve a autenticar una conexión ya aceptada, así que el vencimiento del token no la cierra por sí solo. La conexión termina cuando se cierra el WebSocket o falla su lectura/escritura.
